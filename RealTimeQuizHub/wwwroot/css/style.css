@@ -1,0 +1,11 @@
+﻿body {
+    background-color: #f8f9fa;
+}
+
+#quizArea {
+    margin-top: 20px;
+}
+
+.list-group-item input[type="radio"] {
+    margin-right: 10px;
+}

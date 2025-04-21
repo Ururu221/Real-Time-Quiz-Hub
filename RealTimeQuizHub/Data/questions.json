@@ -1,0 +1,103 @@
+[
+  {
+    "Id": 0,
+    "Name": "Какая столица Франции?",
+    "Answers": [
+      { "Id": 1, "Text": "Париж",   "IsCorrect": true,  "QuestionId": 1 },
+      { "Id": 2, "Text": "Рим",     "IsCorrect": false, "QuestionId": 1 },
+      { "Id": 3, "Text": "Берлин",  "IsCorrect": false, "QuestionId": 1 },
+      { "Id": 4, "Text": "Мадрид",  "IsCorrect": false, "QuestionId": 1 }
+    ]
+  },
+  {
+    "Id": 1,
+    "Name": "Какой язык программирования используется для .NET Core?",
+    "Answers": [
+      { "Id": 5,  "Text": "Java",        "IsCorrect": false, "QuestionId": 2 },
+      { "Id": 6,  "Text": "C#",          "IsCorrect": true,  "QuestionId": 2 },
+      { "Id": 7,  "Text": "Python",      "IsCorrect": false, "QuestionId": 2 },
+      { "Id": 8,  "Text": "JavaScript",  "IsCorrect": false, "QuestionId": 2 }
+    ]
+  },
+  {
+    "Id": 2,
+    "Name": "Сколько бит в одном байте?",
+    "Answers": [
+      { "Id": 9,  "Text": "4",   "IsCorrect": false, "QuestionId": 3 },
+      { "Id": 10, "Text": "8",   "IsCorrect": true,  "QuestionId": 3 },
+      { "Id": 11, "Text": "16",  "IsCorrect": false, "QuestionId": 3 },
+      { "Id": 12, "Text": "32",  "IsCorrect": false, "QuestionId": 3 }
+    ]
+  },
+  {
+    "Id": 3,
+    "Name": "Какой элемент имеет символ O?",
+    "Answers": [
+      { "Id": 13, "Text": "Кислород",    "IsCorrect": true,  "QuestionId": 4 },
+      { "Id": 14, "Text": "Золото",      "IsCorrect": false, "QuestionId": 4 },
+      { "Id": 15, "Text": "Серебро",     "IsCorrect": false, "QuestionId": 4 },
+      { "Id": 16, "Text": "Углерод",     "IsCorrect": false, "QuestionId": 4 }
+    ]
+  },
+  {
+    "Id": 4,
+    "Name": "Сколько дней в високосном году?",
+    "Answers": [
+      { "Id": 17, "Text": "365", "IsCorrect": false, "QuestionId": 5 },
+      { "Id": 18, "Text": "366", "IsCorrect": true,  "QuestionId": 5 },
+      { "Id": 19, "Text": "364", "IsCorrect": false, "QuestionId": 5 },
+      { "Id": 20, "Text": "360", "IsCorrect": false, "QuestionId": 5 }
+    ]
+  },
+  {
+    "Id": 5,
+    "Name": "Какая планета ближе всего к Солнцу?",
+    "Answers": [
+      { "Id": 21, "Text": "Меркурий", "IsCorrect": true,  "QuestionId": 6 },
+      { "Id": 22, "Text": "Венера",    "IsCorrect": false, "QuestionId": 6 },
+      { "Id": 23, "Text": "Земля",     "IsCorrect": false, "QuestionId": 6 },
+      { "Id": 24, "Text": "Марс",      "IsCorrect": false, "QuestionId": 6 }
+    ]
+  },
+  {
+    "Id": 6,
+    "Name": "Сколько континентов на Земле?",
+    "Answers": [
+      { "Id": 25, "Text": "7", "IsCorrect": true,  "QuestionId": 7 },
+      { "Id": 26, "Text": "6", "IsCorrect": false, "QuestionId": 7 },
+      { "Id": 27, "Text": "5", "IsCorrect": false, "QuestionId": 7 },
+      { "Id": 28, "Text": "8", "IsCorrect": false, "QuestionId": 7 }
+    ]
+  },
+  {
+    "Id": 7,
+    "Name": "Как называется процесс превращения воды в пар?",
+    "Answers": [
+      { "Id": 29, "Text": "Испарение",     "IsCorrect": true,  "QuestionId": 8 },
+      { "Id": 30, "Text": "Конденсация",   "IsCorrect": false, "QuestionId": 8 },
+      { "Id": 31, "Text": "Кристаллизация", "IsCorrect": false, "QuestionId": 8 },
+      { "Id": 32, "Text": "Замерзание",     "IsCorrect": false, "QuestionId": 8 }
+    ]
+  },
+  {
+    "Id": 8,
+    "Name": "Сколько часов в сутках?",
+    "Answers": [
+      { "Id": 33, "Text": "24", "IsCorrect": true,  "QuestionId": 9 },
+      { "Id": 34, "Text": "12", "IsCorrect": false, "QuestionId": 9 },
+      { "Id": 35, "Text": "48", "IsCorrect": false, "QuestionId": 9 },
+      { "Id": 36, "Text": "36", "IsCorrect": false, "QuestionId": 9 }
+    ]
+  },
+  {
+    "Id": 9,
+    "Name": "В каком году было основано Microsoft?",
+    "Answers": [
+      { "Id": 37, "Text": "1975", "IsCorrect": true,  "QuestionId": 10 },
+      { "Id": 38, "Text": "1980", "IsCorrect": false, "QuestionId": 10 },
+      { "Id": 39, "Text": "1970", "IsCorrect": false, "QuestionId": 10 },
+      { "Id": 40, "Text": "1985", "IsCorrect": false, "QuestionId": 10 }
+    ]
+  }
+]
+
