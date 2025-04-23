@@ -58,6 +58,9 @@ namespace RealTimeQuizHub.Services
             {
                 throw new Exception($"Question with ID {id} not found.");
             }
+
+            existingQuestion.Name = text;
+
             return await _questionRepository.UpdateQuestionAsync(existingQuestion);
         }
     }

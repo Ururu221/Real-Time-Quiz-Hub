@@ -34,11 +34,11 @@ namespace RealTimeQuizHub.Repository
         }
         public async Task<List<Question>> GetAllAsync()
         {
-            return await _db.Questions.ToListAsync();
+            return await _db.Questions.Include(q => q.Answers).ToListAsync();
         }
         public async Task<Question> GetQuestionByIdAsync(int questionId)
         {
-            var question = await _db.Questions.FindAsync(questionId);
+            var question = await _db.Questions.Include(q => q.Answers).FirstOrDefaultAsync(q => q.Id == questionId);
             if (question == null)
             {
                 return null;

@@ -1,15 +1,17 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
 import LoginPage from './LoginPage';
 import RegisterPage from './RegisterPage';
 import AdminPanel from './AdminPanel';
 import QuestionEditor from './QuestionEditor';
+import UserQuizPage from './UserQuizPage'; // ← вот эта строка обязательна
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/" element={<UserQuizPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/admin/questions" element={<AdminPanel />} />

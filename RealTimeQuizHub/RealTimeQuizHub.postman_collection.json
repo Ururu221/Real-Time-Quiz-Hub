@@ -1,0 +1,260 @@
+{
+    "info": {
+      "name": "RealTimeQuizHub API Tests",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+      { "key": "baseUrl",   "value": "http://localhost:5000" },
+      { "key": "authToken", "value": "" },
+      { "key": "questionId","value": "" },
+      { "key": "answerId",  "value": "" },
+      { "key": "quizId",    "value": "quiz1" }
+    ],
+    "item": [
+      {
+        "name": "Auth",
+        "item": [
+          {
+            "name": "Register",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "url": { "raw": "{{baseUrl}}/api/auth/register" },
+              "body": {
+                "mode": "raw",
+                "raw": "{\"name\":\"admin\",\"email\":\"admin@example.com\",\"password\":\"P@ssw0rd!\",\"isAdmin\":true}"
+              }
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                    "var json = pm.response.json();",
+                    "pm.environment.set(\"authToken\", json.token);"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "name": "Login",
+            "request": {
+              "method": "POST",
+              "header":[ { "key":"Content-Type","value":"application/json" } ],
+              "url": { "raw":"{{baseUrl}}/api/auth/login" },
+              "body": {
+                "mode":"raw",
+                "raw":"{\"email\":\"admin@example.com\",\"password\":\"P@ssw0rd!\"}"
+              }
+            },
+            "event":[
+              {
+                "listen":"test",
+                "script":{
+                  "exec":[
+                    "pm.test(\"Status 200\",() => pm.response.to.have.status(200));",
+                    "var json = pm.response.json();",
+                    "pm.environment.set(\"authToken\", json.token);"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Admin Questions",
+        "item": [
+          {
+            "name": "Create Question",
+            "request": {
+              "method":"POST",
+              "header":[
+                {"key":"Content-Type","value":"application/json"},
+                {"key":"Authorization","value":"Bearer {{authToken}}"}
+              ],
+              "url":{"raw":"{{baseUrl}}/api/admin/questions"},
+              "body":{"mode":"raw","raw":"{\"text\":\"Sample question?\"}"}
+            },
+            "event":[
+              {
+                "listen":"test",
+                "script":{
+                  "exec":[
+                    "pm.test(\"Status 200\",() => pm.response.to.have.status(200));",
+                    "var id = pm.response.json();",
+                    "pm.environment.set(\"questionId\", id);"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "name":"Get All Questions",
+            "request":{
+              "method":"GET",
+              "header":[{"key":"Authorization","value":"Bearer {{authToken}}"}],
+              "url":{"raw":"{{baseUrl}}/api/admin/questions"}
+            }
+          },
+          {
+            "name":"Get Question by ID",
+            "request":{
+              "method":"GET",
+              "header":[{"key":"Authorization","value":"Bearer {{authToken}}"}],
+              "url":{"raw":"{{baseUrl}}/api/admin/questions/{{questionId}}"}
+            }
+          },
+          {
+            "name":"Update Question",
+            "request":{
+              "method":"PUT",
+              "header":[
+                {"key":"Content-Type","value":"application/json"},
+                {"key":"Authorization","value":"Bearer {{authToken}}"}
+              ],
+              "url":{"raw":"{{baseUrl}}/api/admin/questions/{{questionId}}"},
+              "body":{"mode":"raw","raw":"{\"text\":\"Updated sample question?\"}"}
+            }
+          },
+          {
+            "name":"Delete Question",
+            "request":{
+              "method":"DELETE",
+              "header":[{"key":"Authorization","value":"Bearer {{authToken}}"}],
+              "url":{"raw":"{{baseUrl}}/api/admin/questions/{{questionId}}"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "Admin Answers",
+        "item": [
+          {
+            "name":"Create Answer",
+            "request":{
+              "method":"POST",
+              "header":[
+                {"key":"Content-Type","value":"application/json"},
+                {"key":"Authorization","value":"Bearer {{authToken}}"}
+              ],
+              "url":{"raw":"{{baseUrl}}/api/admin/answers"},
+              "body":{"mode":"raw","raw":"{\"questionId\":{{questionId}},\"text\":\"Sample answer\",\"isCorrect\":false}"}
+            },
+            "event":[
+              {
+                "listen":"test",
+                "script":{
+                  "exec":[
+                    "pm.test(\"Status 200\",() => pm.response.to.have.status(200));",
+                    "var id = pm.response.json();",
+                    "pm.environment.set(\"answerId\", id);"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "name":"Get Answers by Question ID",
+            "request":{
+              "method":"GET",
+              "header":[{"key":"Authorization","value":"Bearer {{authToken}}"}],
+              "url":{
+                "raw":"{{baseUrl}}/api/admin/answers?questionId={{questionId}}",
+                "query":[{"key":"questionId","value":"{{questionId}}"}]
+              }
+            }
+          },
+          {
+            "name":"Get Answer by ID",
+            "request":{
+              "method":"GET",
+              "header":[{"key":"Authorization","value":"Bearer {{authToken}}"}],
+              "url":{"raw":"{{baseUrl}}/api/admin/answers/{{answerId}}"}
+            }
+          },
+          {
+            "name":"Update Answer",
+            "request":{
+              "method":"PUT",
+              "header":[
+                {"key":"Content-Type","value":"application/json"},
+                {"key":"Authorization","value":"Bearer {{authToken}}"}
+              ],
+              "url":{"raw":"{{baseUrl}}/api/admin/answers/{{answerId}}"},
+              "body":{"mode":"raw","raw":"{\"text\":\"Updated answer\",\"isCorrect\":true}"}
+            }
+          },
+          {
+            "name":"Delete Answer",
+            "request":{
+              "method":"DELETE",
+              "header":[{"key":"Authorization","value":"Bearer {{authToken}}"}],
+              "url":{"raw":"{{baseUrl}}/api/admin/answers/{{answerId}}"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "Public",
+        "item": [
+          {
+            "name":"Get All Questions (Public)",
+            "request":{
+              "method":"GET",
+              "url":{"raw":"{{baseUrl}}/api/questions"}
+            }
+          }
+        ]
+      },
+      {
+        "name": "Quiz Playground",
+        "item": [
+          {
+            "name":"Start Quiz",
+            "request":{
+              "method":"POST",
+              "header":[{"key":"Content-Type","value":"application/json"}],
+              "url":{"raw":"{{baseUrl}}/api/quiz/start"},
+              "body":{"mode":"raw","raw":"\"{{quizId}}\""}
+            }
+          },
+          {
+            "name":"Get Next Question",
+            "request":{
+              "method":"GET",
+              "url":{"raw":"{{baseUrl}}/api/quiz/{{quizId}}/next"}
+            }
+          },
+          {
+            "name":"Submit Answer",
+            "request":{
+              "method":"POST",
+              "header":[{"key":"Content-Type","value":"application/json"}],
+              "url":{"raw":"{{baseUrl}}/api/quiz/{{quizId}}/submit"},
+              "body":{"mode":"raw","raw":"\"Sample answer\""}
+            }
+          },
+          {
+            "name":"Get Quiz Session",
+            "request":{
+              "method":"GET",
+              "url":{"raw":"{{baseUrl}}/api/quiz/{{quizId}}"}
+            }
+          },
+          {
+            "name":"End Quiz",
+            "request":{
+              "method":"POST",
+              "url":{"raw":"{{baseUrl}}/api/quiz/{{quizId}}/end"}
+            }
+          }
+        ]
+      }
+    ]
+  }
+  

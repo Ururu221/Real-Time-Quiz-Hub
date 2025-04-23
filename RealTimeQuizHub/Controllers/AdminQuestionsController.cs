@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using RealTimeQuizHub.Models;
 using RealTimeQuizHub.Models.Dtos;
 using RealTimeQuizHub.Services;
+using RealTimeQuizHub.Services.Interfaces;
 
 namespace RealTimeQuizHub.Controllers
 {
@@ -12,9 +13,9 @@ namespace RealTimeQuizHub.Controllers
     [Authorize(Policy = "AdminOnly")]
     public class AdminQuestionsController : ControllerBase
     {
-        private readonly QuestionService _questionService;
-        private readonly AnswerService _answerService;
-        public AdminQuestionsController(QuestionService questionService, AnswerService answerService)
+        private readonly IQuestionService _questionService;
+        private readonly IAnswerService _answerService;
+        public AdminQuestionsController(IQuestionService questionService, IAnswerService answerService)
         {
             _questionService = questionService;
             _answerService = answerService;

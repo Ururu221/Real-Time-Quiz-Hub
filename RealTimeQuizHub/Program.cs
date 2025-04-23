@@ -35,8 +35,10 @@ namespace RealTimeQuizHub
                 return new JsonQuestionService(filePath);
             });
 
-            builder.Services.AddSingleton<IQuizSessionService, QuizSessionService>();
+            
             builder.Services.AddSingleton<IJwtGenerator, JwtGenerator>();
+
+            builder.Services.AddScoped<IQuizSessionService, QuizSessionService>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IAnswerService, AnswerService>();
@@ -64,7 +66,7 @@ namespace RealTimeQuizHub
                   };
               });
             builder.Services.AddAuthorization(options => {
-                options.AddPolicy("AdminOnly", policy => policy.RequireClaim("isAdmin", "true"));
+                options.AddPolicy("AdminOnly", p => p.RequireClaim("isAdmin", "True", "true"));
             });
 
             builder.Services.AddCors(options => {

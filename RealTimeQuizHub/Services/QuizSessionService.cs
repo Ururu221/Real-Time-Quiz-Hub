@@ -5,16 +5,16 @@ namespace RealTimeQuizHub.Services
 {
     public class QuizSessionService : IQuizSessionService
     {
-        private readonly IJsonQuestionService _questionService;
+        private readonly IQuestionService _questionService;
         private readonly Dictionary<string, QuizSession> _quizSessions = new();
-        public QuizSessionService(IJsonQuestionService questionService)
+        public QuizSessionService(IQuestionService questionService)
         {
             _questionService = questionService;
         }
 
         public async Task<QuizSession> StartQuizAsync(string quizId)
         {
-            var questions = await _questionService.GetAllAsync();
+            var questions = await _questionService.GetAllQuestionsAsync();
             var quizSession = new QuizSession
             {
                 QuizId = quizId,
