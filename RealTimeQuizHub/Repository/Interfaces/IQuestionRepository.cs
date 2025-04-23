@@ -1,13 +1,13 @@
 ﻿using RealTimeQuizHub.Models;
 
-namespace RealTimeQuizHub.Services.Interfaces
+namespace RealTimeQuizHub.Repository.Interfaces
 {
-    public interface IQuestionService
+    public interface IQuestionRepository
     {
-        Task<List<Question>> GetAllQuestionsAsync();
+        Task<List<Question>> GetAllAsync();
         Task<Question> GetQuestionByIdAsync(int questionId);
         Task<bool> AddQuestionAsync(Question question);
-        Task<bool> UpdateQuestionAsync(int id, string text);
+        Task<bool> UpdateQuestionAsync(Question question);
         Task<bool> DeleteQuestionAsync(int questionId);
     }
 }

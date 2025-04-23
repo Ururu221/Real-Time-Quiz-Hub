@@ -7,10 +7,10 @@ namespace RealTimeQuizHub.Controllers
     [Route("api/[controller]")]
     public class QuestionsController : ControllerBase
     {
-        private readonly IQuestionService _questionService;
+        private readonly IJsonQuestionService _questionService;
         private readonly ILogger<QuizController> _logger;
 
-        public QuestionsController(IQuestionService questionService, ILogger<QuizController> logger)
+        public QuestionsController(IJsonQuestionService questionService, ILogger<QuizController> logger)
         {
             _questionService = questionService;
             _logger = logger;

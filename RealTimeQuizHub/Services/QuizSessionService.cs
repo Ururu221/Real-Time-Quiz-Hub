@@ -5,9 +5,9 @@ namespace RealTimeQuizHub.Services
 {
     public class QuizSessionService : IQuizSessionService
     {
-        private readonly IQuestionService _questionService;
+        private readonly IJsonQuestionService _questionService;
         private readonly Dictionary<string, QuizSession> _quizSessions = new();
-        public QuizSessionService(IQuestionService questionService)
+        public QuizSessionService(IJsonQuestionService questionService)
         {
             _questionService = questionService;
         }

@@ -10,9 +10,9 @@ namespace RealTimeQuizHub.Controllers
     public class QuizController : ControllerBase
     {
         private readonly IQuizSessionService _quizSessionService;
-        private readonly IQuestionService _questionService;
+        private readonly IJsonQuestionService _questionService;
         private readonly ILogger<QuizController> _logger;
-        public QuizController(IQuizSessionService quizSessionService, IQuestionService questionService, ILogger<QuizController> logger)
+        public QuizController(IQuizSessionService quizSessionService, IJsonQuestionService questionService, ILogger<QuizController> logger)
         {
             _quizSessionService = quizSessionService;
             _questionService = questionService;

@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace RealTimeQuizHub.Services
 {
-    public class JsonQuestionService : IQuestionService
+    public class JsonQuestionService : IJsonQuestionService
     {
         private readonly string _filePath;
 
