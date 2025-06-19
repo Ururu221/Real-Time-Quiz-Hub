@@ -6,7 +6,7 @@ namespace RealTimeQuizHub.Services
     public class QuizSessionService : IQuizSessionService
     {
         private readonly IQuestionService _questionService;
-        private readonly Dictionary<string, QuizSession> _quizSessions = new();
+        private readonly static Dictionary<string, QuizSession> _quizSessions = new();
         public QuizSessionService(IQuestionService questionService)
         {
             _questionService = questionService;
@@ -19,7 +19,7 @@ namespace RealTimeQuizHub.Services
             {
                 QuizId = quizId,
                 TotalQuestions = questions.Count,
-                CurrentQuestionIndex = 0,
+                CurrentQuestionIndex = 1,
                 CurrentQuestion = questions[0]
             };
             _quizSessions[quizId] = quizSession;
@@ -31,7 +31,7 @@ namespace RealTimeQuizHub.Services
             if (_quizSessions.TryGetValue(quizId, out var session))
             {
                 session.CurrentQuestionIndex++;
-                if (session.CurrentQuestionIndex < session.TotalQuestions)
+                if (session.CurrentQuestionIndex <= session.TotalQuestions)
                 {
                     session.CurrentQuestion = await _questionService.GetQuestionByIdAsync(session.CurrentQuestionIndex);
                     return session.CurrentQuestion;
@@ -57,12 +57,18 @@ namespace RealTimeQuizHub.Services
                     return true;
                 }
             }
+
+            Console.WriteLine($"Quiz SESSION with ID {quizId} not found");
+
             return false;
         }
 
         public Task<QuizSession> GetQuizSessionAsync(string quizId)
         {
             _quizSessions.TryGetValue(quizId, out var session);
+
+            Console.WriteLine($"Quiz SESSION with ID {quizId} retrieved: \n{session}");
+
             return Task.FromResult(session);
         }
 

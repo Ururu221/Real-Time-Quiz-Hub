@@ -10,7 +10,7 @@ namespace RealTimeQuizHub.Controllers
 {
     [ApiController]
     [Route("api/admin/questions")]
-    [Authorize(Policy = "AdminOnly")]
+    //[Authorize(Policy = "AdminOnly")]
     public class AdminQuestionsController : ControllerBase
     {
         private readonly IQuestionService _questionService;

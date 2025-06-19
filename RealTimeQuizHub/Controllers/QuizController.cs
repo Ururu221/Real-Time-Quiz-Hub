@@ -49,7 +49,7 @@ namespace RealTimeQuizHub.Controllers
                 return Ok("Correct answer!");
             }
             _logger.LogWarning($"Incorrect answer submitted for quiz ID {quizId}.");
-            return BadRequest("Incorrect answer.");
+            return Ok("Incorrect answer.");
         }
 
         [HttpGet("{quizId}")]
@@ -67,9 +67,10 @@ namespace RealTimeQuizHub.Controllers
         [HttpPost("{quizId}/end")]
         public async Task<IActionResult> EndQuizAsync(string quizId)
         {
+            var session = await _quizSessionService.GetQuizSessionAsync(quizId);
             await _quizSessionService.EndQuizAsync(quizId);
             _logger.LogWarning($"Quiz session ended for ID: {quizId}");
-            return Ok("Quiz ended successfully.");
+            return Ok($"Quiz ended successfully with '{session.CorrectAnswers}' out of '{session.TotalQuestions}' score.");
         }
 
         [HttpGet("questions")]
