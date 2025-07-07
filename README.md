@@ -47,8 +47,6 @@ RealTimeQuizHub/        ← solution root
 │  │  └─ index.html
 │  ├─ Program.cs
 │  └─ ...
-├─ README.md            ← this file
-└─ screenshots/         ← create this folder
 ```
 
 ---
