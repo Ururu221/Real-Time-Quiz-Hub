@@ -1,8 +1,14 @@
 # Real Time Quiz Hub
 
-**ASP .NET Core + SignalR quiz with live leaderboard**
+**ASP .NET Core + SignalR quiz with live leaderboard**
 
 A lightweight quiz application showcasing real-time updates, in-memory session management, and a responsive Bootstrap UI. Perfect for learning SignalR, building live features without a database, and demonstrating modern .NET skills in a concise codebase.
+
+---
+
+> ❗ **Important Usage Note**: On first launch, the browser automatically opens to the quiz page. You **must** enter a nickname and click **Start Quiz** in that initial window; otherwise, the server session will be `null`, resulting in runtime errors (e.g., `System.NullReferenceException: 'session was null.'`). Once registered, you can safely open additional browser tabs or windows to play.
+
+> 🛠️ **Managing Questions**: Quiz questions can be added, updated, or removed via the built-in Swagger UI at `https://localhost:5001/swagger`. Use the `/api/quiz` endpoints to manage your question set dynamically.
 
 ---
 
@@ -11,7 +17,7 @@ A lightweight quiz application showcasing real-time updates, in-memory session m
 1. **Clone repo** to solution root (folder with `.git` and `.sln`):
 
    ```bash
-   git clone https://github.com/Ururu221/Real-Time-Quiz-Hub
+   git clone https://github.com/yourusername/RealTimeQuizHub.git
    cd RealTimeQuizHub/RealTimeQuizHub
    ```
 2. **Add SignalR** (if needed):
@@ -41,35 +47,25 @@ RealTimeQuizHub/        ← solution root
 │  │  └─ index.html
 │  ├─ Program.cs
 │  └─ ...
-
+├─ README.md            ← this file
+└─ screenshots/         ← create this folder
 ```
 
 ---
 
-## 🖼️ Screenshots (in `/screenshots`)
+## 📸 Screenshots
 
+1. **Start Quiz**
+   ![Quiz Start](./screenshots/quiz_start.png)
 
-1. **quiz\_start.png**
+2. **Answer Question**
+   ![Quiz Question](./screenshots/quiz_question.png)
 
-   * Input nickname & **Start** button
-     ![quiz\_start](screenshots/quiz_start.png)
+3. **Live Leaderboard**
+   ![Leaderboard Live](./screenshots/leaderboard_live.png)
 
-2. **quiz\_question.png**
-
-   * One question with answer options
-     ![quiz\_question](screenshots/quiz_question.png)
-
-3. **leaderboard\_live.png**
-
-   * Leaderboard table while quiz runs
-     ![leaderboard\_live](screenshots/leaderboard_live.png)
-
-4. **final\_result.png**
-
-   * Result screen after quiz end
-   * Box the result message
-     ![final\_result](screenshots/final_result.png)
-
+4. **Final Result**
+   ![Final Result](./screenshots/final_result.png)
 
 ---
 
@@ -79,4 +75,6 @@ RealTimeQuizHub/        ← solution root
 * **StartQuiz**: API `/api/quiz/start` delivers first question
 * **SubmitAnswer**: client posts answer → server updates session → client invokes `UpdateProgress` on hub
 * **BroadcastLeaderboard**: hub pushes updated scores to all
+
+---
 
