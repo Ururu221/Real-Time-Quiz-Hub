@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using RealTimeQuizHub.Repository.Interfaces;
 using RealTimeQuizHub.Repository;
+using RealTimeQuizHub.Hubs;
 
 namespace RealTimeQuizHub
 {
@@ -75,9 +76,13 @@ namespace RealTimeQuizHub
             });
 
 
+            builder.Services.AddSignalR();
+
+
             var app = builder.Build();
 
 
+            app.MapHub<QuizHub>("/quizHub");
 
             if (app.Environment.IsDevelopment())
             {
