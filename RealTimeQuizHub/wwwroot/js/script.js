@@ -98,36 +98,39 @@ submitBtn.addEventListener('click', async () => {
         return;
     }
 
-    // Отправляем ответ на сервер
+    // 1) Отправляем ответ на сервер
     await fetch(`/api/quiz/${quizId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sel.value)
     });
 
-    // Получаем обновлённое состояние сессии
-    const stateRes = await fetch(`/api/quiz/${quizId}`);
-    const state = await stateRes.json();
-    currentQuestionIndex = state.currentQuestionIndex;
-
-    // Шлём прогресс в лидерборд
-    await connection.invoke(
-        "UpdateProgress",
-        quizId,
-        nickname,
-        currentQuestionIndex,
-        state.correctAnswers
-    );
-
-    // Запрашиваем следующий вопрос
+    // 2) Запрашиваем следующий вопрос (сервер инкрементирует индекс внутри)
     const nextRes = await fetch(`/api/quiz/${quizId}/next`);
     if (nextRes.ok) {
         const nextQ = await nextRes.json();
+
+        // 3) После этого получаем обновлённое состояние сессии
+        const state = await (await fetch(`/api/quiz/${quizId}`)).json();
+        currentQuestionIndex = state.currentQuestionIndex;
+
+        // 4) Шлём прогресс в лидерборд через SignalR
+        await connection.invoke(
+            "UpdateProgress",
+            quizId,
+            nickname,
+            currentQuestionIndex,
+            state.correctAnswers
+        );
+
+        // 5) Рендерим следующий вопрос с корректным номером
         renderQuestion(nextQ, currentQuestionIndex);
     } else {
+        // Викторина завершена
         showResult();
     }
 });
+
 
 // === 5. Показ результата ===
 async function showResult() {
