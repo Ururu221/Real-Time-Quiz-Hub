@@ -2,7 +2,7 @@
 
 **ASP .NET Core + SignalR quiz with live leaderboard**
 
-A lightweight quiz application showcasing real-time updates, in-memory session management, and a responsive Bootstrap UI. Perfect for learning SignalR, building live features without a database, and demonstrating modern .NET skills in a concise codebase.
+A lightweight quiz application showcasing real-time updates, in-memory session management, and a responsive Bootstrap UI. Perfect for learning SignalR, building live features with a database, and demonstrating modern .NET skills in a concise codebase.
 
 ---
 
