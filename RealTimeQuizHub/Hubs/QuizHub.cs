@@ -20,10 +20,14 @@ namespace RealTimeQuizHub.Hubs
         // Клиент вызывает сразу после старта (или при вводе ника)
         public async Task RegisterUser(string quizId, string nickname)
         {
+
+            // Попытка получить сессию, или запустить её, если ещё не была создана
+            var session = await _sessionService.GetQuizSessionAsync(quizId)
+                           ?? await _sessionService.StartQuizAsync(quizId);
+
             // первый вход: добавляем в словарь
             if (!_players.ContainsKey(nickname))
             {
-                var session = await _sessionService.GetQuizSessionAsync(quizId);
                 _players[nickname] = new LeaderboardItem
                 {
                     Nickname = nickname,
