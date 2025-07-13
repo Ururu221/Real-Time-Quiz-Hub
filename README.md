@@ -6,8 +6,6 @@ A lightweight quiz application showcasing real-time updates, in-memory session m
 
 ---
 
-> ❗ **Important Usage Note**: On first launch, the browser automatically opens to the quiz page. You **must** enter a nickname and click **Start Quiz** in that initial window; otherwise, the server session will be `null`, resulting in runtime errors (e.g., `System.NullReferenceException: 'session was null.'`). Once registered, you can safely open additional browser tabs or windows to play.
-
 > 🛠️ **Managing Questions**: Quiz questions can be added, updated, or removed via the built-in Swagger UI at `https://localhost:5001/swagger`. Use the `/api/quiz` endpoints to manage your question set dynamically.
 
 ---
