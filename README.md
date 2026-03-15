@@ -15,7 +15,7 @@ A lightweight quiz application showcasing real-time updates, in-memory session m
 1. **Clone repo** to solution root (folder with `.git` and `.sln`):
 
    ```bash
-   git clone https://github.com/yourusername/RealTimeQuizHub.git
+   git clone https://github.com/Ururu221/RealTimeQuizHub.git
    cd RealTimeQuizHub/RealTimeQuizHub
    ```
 2. **Add SignalR** (if needed):
