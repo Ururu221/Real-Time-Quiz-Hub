@@ -12,23 +12,30 @@ namespace RealTimeQuizHub.Services
             _questionService = questionService;
         }
 
-        public async Task<QuizSession> StartQuizAsync(string quizId)
+        private static string BuildKey(string quizId, string nickname) =>
+            $"{quizId}:{nickname}";
+
+        public async Task<QuizSession> StartQuizAsync(string quizId, string nickname)
         {
             var questions = await _questionService.GetAllQuestionsAsync();
             var quizSession = new QuizSession
             {
                 QuizId = quizId,
+                Nickname = nickname,
                 TotalQuestions = questions.Count,
                 CurrentQuestionIndex = 1,
                 CurrentQuestion = questions[0]
             };
-            _quizSessions[quizId] = quizSession;
+            var key = BuildKey(quizId, nickname); // "quiz1:Alice"
+            _quizSessions[key] = quizSession;
             return quizSession;
         }
 
-        public async Task<Question> GetNextQuestionAsync(string quizId)
+        public async Task<Question> GetNextQuestionAsync(string quizId, string nickname)
         {
-            if (_quizSessions.TryGetValue(quizId, out var session))
+            var key = BuildKey(quizId, nickname);
+
+            if (_quizSessions.TryGetValue(key, out var session))
             {
                 session.CurrentQuestionIndex++;
                 if (session.CurrentQuestionIndex <= session.TotalQuestions)
@@ -40,9 +47,11 @@ namespace RealTimeQuizHub.Services
             return null;
         }
 
-        public async Task<bool> SubmitAnswerAsync(string quizId, string answer)
+        public async Task<bool> SubmitAnswerAsync(string quizId, string answer, string nickname)
         {
-            if (_quizSessions.TryGetValue(quizId, out var session))
+            var key = BuildKey(quizId, nickname);
+
+            if (_quizSessions.TryGetValue(key, out var session))
             {
                 var userAnsw = session.CurrentQuestion.Answers.FirstOrDefault(a => a.Text == answer);
 
@@ -58,23 +67,31 @@ namespace RealTimeQuizHub.Services
                 }
             }
 
-            Console.WriteLine($"Quiz SESSION with ID {quizId} not found");
+            Console.WriteLine($"Quiz SESSION with ID {key} not found");
 
             return false;
         }
 
-        public Task<QuizSession> GetQuizSessionAsync(string quizId)
+        public Task<QuizSession?> GetQuizSessionAsync(string quizId, string nickname)
         {
-            _quizSessions.TryGetValue(quizId, out var session);
+            var key = BuildKey(quizId, nickname);
 
-            Console.WriteLine($"Quiz SESSION with ID {quizId} retrieved: \n{session}");
+            _quizSessions.TryGetValue(key, out var session);
 
-            return Task.FromResult(session);
+            if(session == null)
+            {
+                return Task.FromResult<QuizSession?>(null);
+            }
+
+            Console.WriteLine($"Quiz SESSION with ID {key} retrieved, session nick: {session.Nickname}");
+
+            return Task.FromResult<QuizSession?>(session);
         }
 
-        public Task EndQuizAsync(string quizId)
+        public Task EndQuizAsync(string quizId, string nickname)
         {
-            _quizSessions.Remove(quizId);
+            var key = BuildKey(quizId, nickname);
+            _quizSessions.Remove(key);
             return Task.CompletedTask;
         }
     }

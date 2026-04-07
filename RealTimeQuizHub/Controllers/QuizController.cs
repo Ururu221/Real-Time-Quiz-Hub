@@ -20,17 +20,17 @@ namespace RealTimeQuizHub.Controllers
         }
 
         [HttpPost("start")]
-        public async Task<IActionResult> StartQuizAsync([FromBody] string quizId)
+        public async Task<IActionResult> StartQuizAsync([FromBody] StartQuizRequest request)
         {
-            var session = await _quizSessionService.StartQuizAsync(quizId);
-            _logger.LogInformation($"Quiz session started with ID: {quizId}");
+            var session = await _quizSessionService.StartQuizAsync(request.QuizId, request.Nickname);
+            _logger.LogInformation($"Quiz session started with ID: {request.QuizId} for user: {request.Nickname}");
             return Ok(session);
         }
 
         [HttpGet("{quizId}/next")]
-        public async Task<IActionResult> GetNextQuestionAsync(string quizId)
+        public async Task<IActionResult> GetNextQuestionAsync(string quizId, [FromQuery] string nickname)
         {
-            var question = await _quizSessionService.GetNextQuestionAsync(quizId);
+            var question = await _quizSessionService.GetNextQuestionAsync(quizId, nickname);
             if (question == null)
             {
                 return NotFound("No more questions available.");
@@ -40,22 +40,22 @@ namespace RealTimeQuizHub.Controllers
         }
 
         [HttpPost("{quizId}/submit")]
-        public async Task<IActionResult> SubmitAnswerAsync(string quizId, [FromBody] string answer)
+        public async Task<IActionResult> SubmitAnswerAsync(string quizId, [FromBody] SubmitAnswerRequest request)
         {
-            var isCorrect = await _quizSessionService.SubmitAnswerAsync(quizId, answer);
+            var isCorrect = await _quizSessionService.SubmitAnswerAsync(quizId, request.Answer, request.Nickname);
             if (isCorrect)
             {
-                _logger.LogInformation($"Correct answer submitted for quiz ID {quizId}.");
-                return Ok("Correct answer!");
+                _logger.LogInformation($"Correct answer submitted for quiz ID {quizId}. user: {request.Nickname}");
+                return Ok(new { isCorrect = true }); 
             }
-            _logger.LogWarning($"Incorrect answer submitted for quiz ID {quizId}.");
-            return Ok("Incorrect answer.");
+            _logger.LogWarning($"Incorrect answer submitted for quiz ID {quizId}. user: {request.Nickname}");
+            return Ok(new { isCorrect = false });
         }
 
         [HttpGet("{quizId}")]
-        public async Task<IActionResult> GetQuizSessionAsync(string quizId)
+        public async Task<IActionResult> GetQuizSessionAsync(string quizId, [FromQuery] string nickname)
         {
-            var session = await _quizSessionService.GetQuizSessionAsync(quizId);
+            var session = await _quizSessionService.GetQuizSessionAsync(quizId, nickname);
             if (session == null)
             {
                 return NotFound("Quiz session not found.");
@@ -65,10 +65,10 @@ namespace RealTimeQuizHub.Controllers
         }
 
         [HttpPost("{quizId}/end")]
-        public async Task<IActionResult> EndQuizAsync(string quizId)
+        public async Task<IActionResult> EndQuizAsync(string quizId, [FromQuery] string nickname)
         {
-            var session = await _quizSessionService.GetQuizSessionAsync(quizId);
-            await _quizSessionService.EndQuizAsync(quizId);
+            var session = await _quizSessionService.GetQuizSessionAsync(quizId, nickname);
+            await _quizSessionService.EndQuizAsync(quizId, nickname);
             _logger.LogWarning($"Quiz session ended for ID: {quizId}");
             return Ok($"Quiz ended successfully with '{session.CorrectAnswers}' out of '{session.TotalQuestions}' score.");
         }
@@ -92,5 +92,8 @@ namespace RealTimeQuizHub.Controllers
             _logger.LogInformation($"Question retrieved with ID: {questionId}");
             return Ok(question);
         }
+
+        public record StartQuizRequest(string QuizId, string Nickname);
+        public record SubmitAnswerRequest(string Answer, string Nickname);
     }
 }

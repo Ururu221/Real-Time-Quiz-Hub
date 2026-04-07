@@ -6,6 +6,6 @@
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty; 
-        public bool IsAdmin { get; set; } // Indicates if the user is an admin or just a user
+        public bool IsAdmin { get; set; } 
     }
 }

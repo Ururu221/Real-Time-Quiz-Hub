@@ -4,6 +4,8 @@
     {
         public string QuizId { get; set; } = string.Empty;
 
+        public string Nickname { get; set; } = string.Empty;
+
         public Question CurrentQuestion { get; set; } = new Question();
 
         public int CurrentQuestionIndex { get; set; } = 0;

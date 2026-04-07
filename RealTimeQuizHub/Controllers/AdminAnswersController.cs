@@ -39,7 +39,7 @@ namespace RealTimeQuizHub.Controllers
             }
             catch (System.Exception)
             {
-                return StatusCode(500, "Ошибка сервера");
+                return StatusCode(500, "Помилка сервера");
             }
         }
 
@@ -51,13 +51,13 @@ namespace RealTimeQuizHub.Controllers
                 var answer = await _answerService.GetAnswerByIdAsync(id);
                 if (answer == null)
                 {
-                    return NotFound("Ответ не найден");
+                    return NotFound("Відповідь не знайдено");
                 }
                 return Ok(answer);
             }
             catch (System.Exception)
             {
-                return StatusCode(500, "Ошибка сервера");
+                return StatusCode(500, "Помилка сервера");
             }
         }
 
@@ -70,15 +70,14 @@ namespace RealTimeQuizHub.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                // Проверяем, существует ли вопрос, к которому добавляется ответ
                 var question = await _questionService.GetQuestionByIdAsync(dto.QuestionId);
                 if (question == null)
                 {
-                    return NotFound("Вопрос для ответа не найден");
+                    return NotFound("Не знайдено відповіді на це запитання");
                 }
                 if (string.IsNullOrWhiteSpace(dto.Text))
                 {
-                    return BadRequest("Текст ответа не может быть пустым");
+                    return BadRequest("Текст відповіді не може бути порожнім");
                 }
 
                 var answer = new Answer
@@ -93,7 +92,7 @@ namespace RealTimeQuizHub.Controllers
             }
             catch (System.Exception)
             {
-                return StatusCode(500, "Ошибка сервера");
+                return StatusCode(500, "Помилка сервера");
             }
         }
 
@@ -108,12 +107,12 @@ namespace RealTimeQuizHub.Controllers
                 }
                 if (string.IsNullOrWhiteSpace(dto.Text))
                 {
-                    return BadRequest("Текст ответа не может быть пустым");
+                    return BadRequest("Текст відповіді не може бути порожнім");
                 }
                 var existing = _answerService.GetAnswerByIdAsync(id);
                 if (existing == null)
                 {
-                    return NotFound("Ответ не найден");
+                    return NotFound("Відповідь не знайдено");
                 }
 
                 var answer = new Answer
@@ -124,11 +123,11 @@ namespace RealTimeQuizHub.Controllers
                 };
 
                 await _answerService.UpdateAnswerAsync(answer);
-                return Ok("Ответ обновлен");
+                return Ok("Відповідь оновлено");
             }
             catch (System.Exception)
             {
-                return StatusCode(500, "Ошибка сервера");
+                return StatusCode(500, "Помилка сервера");
             }
         }
 
@@ -140,13 +139,13 @@ namespace RealTimeQuizHub.Controllers
                 bool success = await _answerService.DeleteAnswerAsync(id);
                 if (!success)
                 {
-                    return NotFound("Ответ не найден");
+                    return NotFound("Відповідь не знайдено");
                 }
                 return NoContent();
             }
             catch (System.Exception)
             {
-                return StatusCode(500, "Ошибка сервера");
+                return StatusCode(500, "Помилка сервера");
             }
         }
     }

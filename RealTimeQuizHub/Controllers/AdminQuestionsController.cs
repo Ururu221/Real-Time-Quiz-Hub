@@ -31,7 +31,7 @@ namespace RealTimeQuizHub.Controllers
             }
             catch (System.Exception)
             {
-                return StatusCode(500, "Ошибка сервера");
+                return StatusCode(500, "Помилка сервера");
             }
         }
 
@@ -43,7 +43,7 @@ namespace RealTimeQuizHub.Controllers
                 var question = await _questionService.GetQuestionByIdAsync(id);
                 if (question == null)
                 {
-                    return NotFound("Вопрос не найден");
+                    return NotFound("Відповідь не знайдено");
                 }
                 // Получаем также варианты ответов для этого вопроса
                 List<Answer> answers = await _answerService.GetAnswersByQuestionIdAsync(id);
@@ -51,7 +51,7 @@ namespace RealTimeQuizHub.Controllers
             }
             catch (System.Exception)
             {
-                return StatusCode(500, "Ошибка сервера");
+                return StatusCode(500, "Помилка сервера");
             }
         }
 
@@ -66,7 +66,7 @@ namespace RealTimeQuizHub.Controllers
                 }
                 if (string.IsNullOrWhiteSpace(dto.Text))
                 {
-                    return BadRequest("Текст вопроса не может быть пустым");
+                    return BadRequest("Текст питання не може бути порожнім");
                 }
                 var question = new Question
                 {
@@ -78,7 +78,7 @@ namespace RealTimeQuizHub.Controllers
             }
             catch (System.Exception)
             {
-                return StatusCode(500, "Ошибка сервера");
+                return StatusCode(500, "Помилка сервера");
             }
         }
 
@@ -93,18 +93,18 @@ namespace RealTimeQuizHub.Controllers
                 }
                 if (string.IsNullOrWhiteSpace(dto.Text))
                 {
-                    return BadRequest("Текст вопроса не может быть пустым");
+                    return BadRequest("Текст питання не може бути порожнім");
                 }
                 bool success = await _questionService.UpdateQuestionAsync(id, dto.Text);
                 if (!success)
                 {
-                    return NotFound("Вопрос не найден");
+                    return NotFound("Відповідь не знайдено");
                 }
-                return Ok("Вопрос обновлен");
+                return Ok("Питання оновлено");
             }
             catch (System.Exception)
             {
-                return StatusCode(500, "Ошибка сервера");
+                return StatusCode(500, "Помилка сервера");
             }
         }
 
@@ -116,13 +116,13 @@ namespace RealTimeQuizHub.Controllers
                 bool success = await _questionService.DeleteQuestionAsync(id);
                 if (!success)
                 {
-                    return NotFound("Вопрос не найден");
+                    return NotFound("Відповідь не знайдено");
                 }
                 return NoContent();
             }
             catch (System.Exception)
             {
-                return StatusCode(500, "Ошибка сервера");
+                return StatusCode(500, "Помилка сервера");
             }
         }
     }

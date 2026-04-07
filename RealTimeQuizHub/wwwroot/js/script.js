@@ -1,146 +1,217 @@
-﻿// === Настройки и глобальные переменные ===
 const quizId = 'default-session';
 let nickname = '';
 let totalQuestions = 0;
 let currentQuestionIndex = 1;
 
-// Элементы DOM
-const startArea = document.getElementById('startArea');
-const startBtn = document.getElementById('startBtn');
-const nickInput = document.getElementById('nickInput');
-const quizArea = document.getElementById('quizArea');
+const startArea       = document.getElementById('startArea');
+const startBtn        = document.getElementById('startBtn');
+const nickInput       = document.getElementById('nickInput');
+const quizArea        = document.getElementById('quizArea');
+const resultArea      = document.getElementById('resultArea');
 const questionContainer = document.getElementById('questionContainer');
-const submitBtn = document.getElementById('submitBtn');
-const leaderboardBody = document.getElementById('leaderboardBody');
+const submitBtn       = document.getElementById('submitBtn');
+const leaderboardList = document.getElementById('leaderboardList');
+const progressBar     = document.getElementById('progressBar');
+const progressLabel   = document.getElementById('progressLabel');
+const connectionDot   = document.getElementById('connectionDot');
 
-// === 1. Инициализация SignalR ===
+// ===== SIGNALR =====
 const connection = new signalR.HubConnectionBuilder()
     .withUrl("/quizHub")
+    .withAutomaticReconnect()
     .build();
 
 connection.on("BroadcastLeaderboard", items => {
-    leaderboardBody.innerHTML = '';
-    items.forEach(it => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-      <td>${it.nickname}</td>
-      <td>${it.correctAnswers}</td>
-      <td>${it.currentQuestionIndex}</td>
-      <td>${it.totalQuestions}</td>
-    `;
-        leaderboardBody.appendChild(tr);
+    // Сортуємо за кількістю правильних відповідей
+    const sorted = [...items].sort((a, b) => b.correctAnswers - a.correctAnswers);
+    leaderboardList.innerHTML = '';
+    sorted.forEach((it, i) => {
+        const li = document.createElement('li');
+        li.className = 'lb-item' + (it.nickname === nickname ? ' is-me' : '');
+        li.innerHTML = `
+            <span class="lb-rank">${i + 1}</span>
+            <div class="lb-info">
+                <div class="lb-name">${escapeHtml(it.nickname)}</div>
+                <div class="lb-progress">Питання ${it.currentQuestionIndex} / ${it.totalQuestions}</div>
+            </div>
+            <span class="lb-score">${it.correctAnswers}</span>
+        `;
+        leaderboardList.appendChild(li);
     });
 });
 
 connection.start()
-    .then(() => console.log("SignalR: connected"))
-    .catch(err => console.error(err));
+    .then(() => connectionDot.classList.add('connected'))
+    .catch(err => console.error('SignalR error:', err));
 
-// === 2. Старт викторины ===
+// ===== СТАРТ =====
 startBtn.addEventListener('click', async () => {
     nickname = nickInput.value.trim();
     if (!nickname) {
-        alert('Введите ник!');
+        nickInput.focus();
+        nickInput.style.borderColor = 'var(--error)';
+        setTimeout(() => nickInput.style.borderColor = '', 1000);
         return;
     }
 
-    // Регистрируем пользователя в хабе
+    startBtn.disabled = true;
+    startBtn.querySelector('span').textContent = 'Завантаження...';
+
     await connection.invoke("RegisterUser", quizId, nickname);
 
-    // Запрашиваем начало сессии у API
     const res = await fetch('/api/quiz/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(quizId)
+        body: JSON.stringify({ quizId, nickname })
     });
     const session = await res.json();
     totalQuestions = session.totalQuestions;
     currentQuestionIndex = session.currentQuestionIndex;
 
-    // Переключаем UI
     startArea.classList.add('d-none');
-    renderQuestion(session.currentQuestion, currentQuestionIndex);
     quizArea.classList.remove('d-none');
+    updateProgress();
+    renderQuestion(session.currentQuestion);
 });
 
-// === 3. Рендер вопроса ===
-function renderQuestion(q, idx) {
+nickInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') startBtn.click();
+});
+
+// ===== РЕНДЕР ПИТАННЯ =====
+function renderQuestion(q) {
     questionContainer.innerHTML = '';
 
-    const title = document.createElement('h5');
-    title.textContent = `Вопрос ${idx}/${totalQuestions}: ${q.name}`;
-    questionContainer.appendChild(title);
+    const title = document.createElement('p');
+    title.className = 'question-text';
+    title.textContent = q.name;
 
     const list = document.createElement('div');
-    list.className = 'list-group mb-3';
+    list.className = 'answers-list';
 
-    q.answers.forEach(a => {
+    q.answers.forEach((a, i) => {
         const label = document.createElement('label');
-        label.className = 'list-group-item d-flex align-items-center';
+        label.className = 'answer-label';
+
         const radio = document.createElement('input');
         radio.type = 'radio';
         radio.name = 'answer';
         radio.value = a.text;
-        radio.className = 'form-check-input me-2';
+
+        const radioCustom = document.createElement('span');
+        radioCustom.className = 'answer-radio-custom';
+
+        const text = document.createElement('span');
+        text.className = 'answer-text';
+        text.textContent = a.text;
+
         label.appendChild(radio);
-        label.appendChild(document.createTextNode(a.text));
+        label.appendChild(radioCustom);
+        label.appendChild(text);
+
+        // Затримана поява варіантів
+        label.style.animationDelay = `${i * 60}ms`;
+        label.style.animation = 'fadeIn 0.3s ease both';
+
         list.appendChild(label);
     });
 
+    questionContainer.appendChild(title);
     questionContainer.appendChild(list);
+
+    submitBtn.disabled = false;
 }
 
-// === 4. Отправка ответа ===
+// ===== ВІДПРАВКА ВІДПОВІДІ =====
 submitBtn.addEventListener('click', async () => {
     const sel = document.querySelector('input[name="answer"]:checked');
-    if (!sel) {
-        alert('Please select an answer');
-        return;
-    }
+    if (!sel) return;
 
-    // 1) Отправляем ответ
-    await fetch(`/api/quiz/${quizId}/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sel.value)
-    });
+    submitBtn.disabled = true;
 
-    // 2) Непосредственно после submit: получаем текущее состояние
-    const state = await (await fetch(`/api/quiz/${quizId}`)).json();
-    currentQuestionIndex = state.currentQuestionIndex;
+    try {
+        console.log('1. Відправка відповіді...');
+        const res = await fetch(`/api/quiz/${quizId}/submit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answer: sel.value, nickname })
+        });
+        const data = await res.json();
 
-    // 3) И сразу шлём прогресс в лидборд
-    await connection.invoke(
-        "UpdateProgress",
-        quizId,
-        nickname,
-        currentQuestionIndex,
-        state.correctAnswers
-    );
+        console.log('Сирі дані з сервера:', data);
 
-    // 4) Теперь запрашиваем следующий вопрос
-    const nextRes = await fetch(`/api/quiz/${quizId}/next`);
-    if (nextRes.ok) {
-        const nextQ = await nextRes.json();
-        // 5) Рендерим следующий вопрос
-        renderQuestion(nextQ, currentQuestionIndex);
-    } else {
-        // 6) Если вопросов больше нет — показываем финал
-        showResult();
+        const isCorrect = data.isCorrect === true || String(data.isCorrect).toLowerCase() === 'true';
+
+        console.log('2. Відповідь оброблено (boolean):', isCorrect);
+
+        showFeedback(isCorrect);
+
+        console.log('3. Отримання стану...');
+        const stateRes = await fetch(`/api/quiz/${quizId}?nickname=${encodeURIComponent(nickname)}`);
+        const state = await stateRes.json();
+        console.log('4. Стан:', state);
+        currentQuestionIndex = state.currentQuestionIndex;
+
+        await connection.invoke("UpdateProgress", quizId, nickname, currentQuestionIndex, state.correctAnswers);
+
+        await new Promise(r => setTimeout(r, 700));
+
+        console.log('5. Запит наступного питання...');
+        const nextRes = await fetch(`/api/quiz/${quizId}/next?nickname=${encodeURIComponent(nickname)}`);
+        console.log('6. Статус next:', nextRes.status, nextRes.ok);
+        
+        if (nextRes.ok) {
+            const nextQ = await nextRes.json();
+            console.log('7. Наступне питання:', nextQ);
+            updateProgress();
+            renderQuestion(nextQ);
+        } else {
+            console.log('8. Показ результатів');
+            showResult();
+        }
+    } catch (error) {
+        console.error('Помилка:', error);
+        submitBtn.disabled = false; // Розблоковуємо кнопку при помилці
     }
 });
 
+// ===== ПРОГРЕС =====
+function updateProgress() {
+    const pct = ((currentQuestionIndex - 1) / totalQuestions) * 100;
+    progressBar.style.width = `${pct}%`;
+    progressLabel.textContent = `${currentQuestionIndex} / ${totalQuestions}`;
+}
 
-// === 5. Показ результата ===
+// ===== РЕЗУЛЬТАТ =====
 async function showResult() {
-    const res = await fetch(`/api/quiz/${quizId}`);
+    const res = await fetch(`/api/quiz/${quizId}?nickname=${encodeURIComponent(nickname)}`);
     const session = await res.json();
 
-    questionContainer.innerHTML = '';
-    submitBtn.classList.add('d-none');
+    await fetch(`/api/quiz/${quizId}/end?nickname=${encodeURIComponent(nickname)}`, { method: 'POST' });
 
-    const div = document.createElement('div');
-    div.className = 'alert alert-success';
-    div.textContent = `You got ${session.correctAnswers} of ${session.totalQuestions}`;
-    questionContainer.appendChild(div);
+    const pct = session.correctAnswers / session.totalQuestions;
+    document.getElementById('resultEmoji').textContent = pct >= 0.8 ? '🏆' : pct >= 0.5 ? '🎯' : '💪';
+    document.getElementById('resultScore').textContent = `${session.correctAnswers} / ${session.totalQuestions}`;
+    document.getElementById('resultNick').textContent = nickname;
+
+    quizArea.classList.add('d-none');
+    resultArea.classList.remove('d-none');
+}
+
+// ===== TOAST FEEDBACK =====
+let toastEl = null;
+function showFeedback(isCorrect) {
+    if (!toastEl) {
+        toastEl = document.createElement('div');
+        toastEl.className = 'feedback-toast';
+        document.body.appendChild(toastEl);
+    }
+    toastEl.className = `feedback-toast ${isCorrect ? 'correct' : 'wrong'}`;
+    toastEl.textContent = isCorrect ? '✓ Правильно!' : '✗ Неправильно';
+    requestAnimationFrame(() => toastEl.classList.add('show'));
+    setTimeout(() => toastEl.classList.remove('show'), 1800);
+}
+
+function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
