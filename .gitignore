@@ -44,3 +44,4 @@ logs/
 *.psess
 *.vsp
 *.vspx
+/TestResults/
