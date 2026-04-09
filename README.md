@@ -49,7 +49,7 @@ RealTimeQuizHub/        ← solution root
 
 ---
 
-## 📸 Screenshots
+## 📸 Screenshots (old design)
 
 1. **Start Quiz**
    ![Quiz Start](./screenshots/quiz_start.png)
