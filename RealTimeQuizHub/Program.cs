@@ -63,7 +63,25 @@ namespace RealTimeQuizHub
                       ValidAudience = jwtSettings.Audience,
                       ValidateLifetime = true,
                       IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
-                      ValidateIssuerSigningKey = true
+                      ValidateIssuerSigningKey = true,
+                      ClockSkew = TimeSpan.Zero
+                  };
+
+                  // SignalR sends the JWT via the "access_token" query string
+                  // parameter (WebSockets/SSE can't set Authorization headers).
+                  opts.Events = new JwtBearerEvents
+                  {
+                      OnMessageReceived = context =>
+                      {
+                          var accessToken = context.Request.Query["access_token"];
+                          var path = context.HttpContext.Request.Path;
+                          if (!string.IsNullOrEmpty(accessToken) &&
+                              path.StartsWithSegments("/quizHub"))
+                          {
+                              context.Token = accessToken;
+                          }
+                          return Task.CompletedTask;
+                      }
                   };
               });
             builder.Services.AddAuthorization(options => {

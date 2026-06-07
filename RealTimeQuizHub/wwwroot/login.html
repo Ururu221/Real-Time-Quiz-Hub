@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QuizHub — Вхід</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+
+    <div class="wrapper">
+
+        <header class="header">
+            <div class="logo">Quiz<span>Hub</span></div>
+        </header>
+
+        <section class="screen screen--start auth-screen">
+
+            <span class="eyebrow start-eyebrow">
+                <span class="dot"></span> Real-Time Quiz Hub
+            </span>
+
+            <!-- Перемикач Вхід / Реєстрація -->
+            <div class="auth-tabs" role="tablist">
+                <button type="button" id="tabLogin" class="auth-tab is-active" role="tab">Вхід</button>
+                <button type="button" id="tabRegister" class="auth-tab" role="tab">Реєстрація</button>
+            </div>
+
+            <!-- Форма входу -->
+            <form id="loginForm" class="auth-form" novalidate>
+                <h1 class="start-title auth-title">З поверненням.</h1>
+
+                <div class="input-wrap">
+                    <input type="email" id="loginEmail" class="nick-input" placeholder="Email" autocomplete="email" required />
+                </div>
+                <div class="input-wrap">
+                    <input type="password" id="loginPassword" class="nick-input" placeholder="Пароль" autocomplete="current-password" required />
+                </div>
+
+                <button type="submit" id="loginBtn" class="btn">
+                    <span>Увійти</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </form>
+
+            <!-- Форма реєстрації -->
+            <form id="registerForm" class="auth-form d-none" novalidate>
+                <h1 class="start-title auth-title">Створи акаунт.</h1>
+
+                <div class="input-wrap">
+                    <input type="text" id="regName" class="nick-input" placeholder="Ім'я" maxlength="30" autocomplete="name" required />
+                </div>
+                <div class="input-wrap">
+                    <input type="email" id="regEmail" class="nick-input" placeholder="Email" autocomplete="email" required />
+                </div>
+                <div class="input-wrap">
+                    <input type="password" id="regPassword" class="nick-input" placeholder="Пароль (мін. 4 символи)" minlength="4" autocomplete="new-password" required />
+                </div>
+
+                <label class="auth-checkbox">
+                    <input type="checkbox" id="regIsAdmin" />
+                    <span class="auth-checkbox-box"></span>
+                    <span class="auth-checkbox-text">
+                        Я хочу бути адміністратором
+                        <small>Створювати кімнати та керувати питаннями</small>
+                    </span>
+                </label>
+
+                <button type="submit" id="registerBtn" class="btn">
+                    <span>Зареєструватися</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </form>
+
+            <p id="authError" class="auth-error d-none"></p>
+
+        </section>
+
+    </div>
+
+    <script src="./js/auth.js"></script>
+</body>
+</html>

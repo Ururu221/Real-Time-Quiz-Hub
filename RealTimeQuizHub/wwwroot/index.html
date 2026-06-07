@@ -4,37 +4,39 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>QuizHub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
 
-    <div class="bg-grid"></div>
-    <div class="glow-orb glow-1"></div>
-    <div class="glow-orb glow-2"></div>
+    <div class="top-progress" id="topProgress">
+        <div class="top-progress-fill" id="progressBar"></div>
+    </div>
 
     <div class="wrapper">
 
         <header class="header">
-            <div class="logo">QUIZ<span>HUB</span></div>
-            <div class="connection-dot" id="connectionDot" title="Підключення..."></div>
+            <div class="logo">Quiz<span>Hub</span></div>
+            <div class="header-right">
+                <button type="button" class="logout-btn" onclick="logout()">Вийти</button>
+                <div class="connection-dot" id="connectionDot" title="Підключення"></div>
+            </div>
         </header>
 
         <!-- Екран входу -->
         <section id="startArea" class="screen screen--start">
-            <div class="start-card">
-                <div class="start-badge">LIVE</div>
-                <h1 class="start-title">Готовий до бою?</h1>
-                <p class="start-sub">Введи нік і приєднуйся до вікторини</p>
-                <div class="input-wrap">
-                    <input type="text" id="nickInput" class="nick-input" placeholder="Твій нікнейм" maxlength="20" autocomplete="off" />
-                    <span class="input-icon">⚡</span>
-                </div>
-                <button id="startBtn" class="btn-start">
-                    <span>Почати</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </button>
+            <span class="eyebrow eyebrow--live start-eyebrow">
+                <span class="dot"></span> Live quiz &mdash; No. 01
+            </span>
+            <h1 class="start-title">Готовий<br>до бою?</h1>
+            <p class="start-sub">Введи нік і приєднуйся до вікторини. Грай у реальному часі проти всіх онлайн.</p>
+            <div class="input-wrap">
+                <input type="text" id="nickInput" class="nick-input" placeholder="Твій нікнейм" maxlength="20" autocomplete="off" />
             </div>
+            <button id="startBtn" class="btn">
+                <span>Почати</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
         </section>
 
         <!-- Екран квізу -->
@@ -42,25 +44,29 @@
             <div class="quiz-layout">
 
                 <div class="quiz-main">
-                    <div class="progress-bar-wrap">
-                        <div class="progress-bar-track">
-                            <div class="progress-bar-fill" id="progressBar"></div>
+                    <div class="quiz-meta">
+                        <span class="progress-label" id="progressLabel">Question <strong>01</strong> &mdash; of 10</span>
+                    </div>
+
+                    <div class="timer-wrap" id="timerWrap">
+                        <span class="timer-number" id="timerNumber">30</span>
+                        <div class="timer-track">
+                            <div class="timer-fill" id="timerFill"></div>
                         </div>
-                        <span class="progress-label" id="progressLabel">1 / 10</span>
                     </div>
 
                     <div id="questionContainer" class="question-container"></div>
 
-                    <button id="submitBtn" class="btn-submit">
+                    <button id="submitBtn" class="btn btn-submit">
                         <span>Відповісти</span>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </button>
                 </div>
 
                 <aside class="leaderboard-panel">
                     <div class="lb-header">
-                        <span class="lb-title">Лідерборд</span>
-                        <span class="lb-live">● LIVE</span>
+                        <span class="lb-title">Leaderboard</span>
+                        <span class="lb-live">Live</span>
                     </div>
                     <ul class="lb-list" id="leaderboardList"></ul>
                 </aside>
@@ -70,16 +76,23 @@
 
         <!-- Екран результату -->
         <section id="resultArea" class="screen screen--result d-none">
-            <div class="result-card">
-                <div class="result-emoji" id="resultEmoji">🏆</div>
-                <h2 class="result-title">Квіз завершено!</h2>
-                <div class="result-score" id="resultScore">0 / 0</div>
-                <p class="result-nick" id="resultNick"></p>
-                <button class="btn-start" onclick="location.reload()">
-                    <span>Грати знову</span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-                </button>
+            <span class="eyebrow result-eyebrow">
+                <span id="resultEmoji" class="result-mark">🏆</span>
+                Final score
+            </span>
+            <h2 class="result-title">Квіз<br>завершено.</h2>
+            <div class="result-score-wrap">
+                <span class="result-score" id="resultScore">0</span>
+                <span class="result-score-of" id="resultScoreOf">/ 0</span>
             </div>
+            <div class="result-meta">
+                <span>Player &mdash; <strong id="resultNick"></strong></span>
+                <span id="resultPct">0%</span>
+            </div>
+            <button class="btn btn--ghost" onclick="location.reload()">
+                <span>Грати знову</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+            </button>
         </section>
 
     </div>

@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using RealTimeQuizHub.Hubs;
 using RealTimeQuizHub.Hubs.Interfaces;
 using RealTimeQuizHub.Services.Interfaces;
 
 namespace RealTimeQuizHub.Hubs
 {
+    [Authorize]
     public class QuizHub : Hub<IQuizClient>
     {
         private static readonly Dictionary<string, LeaderboardItem> _players

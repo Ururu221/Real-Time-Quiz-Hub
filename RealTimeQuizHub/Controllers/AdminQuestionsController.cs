@@ -56,6 +56,7 @@ namespace RealTimeQuizHub.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Create([FromBody] QuestionDto dto)
         {
             try
@@ -83,6 +84,7 @@ namespace RealTimeQuizHub.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Update(int id, [FromBody] QuestionDto dto)
         {
             try
@@ -109,6 +111,7 @@ namespace RealTimeQuizHub.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Delete(int id)
         {
             try

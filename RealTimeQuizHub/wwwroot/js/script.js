@@ -1,61 +1,198 @@
 const quizId = 'default-session';
+const QUESTION_TIME = 30;
+const URGENT_THRESHOLD = 10;
+
+// ===== AUTH GUARD =====
+const TOKEN_KEY = 'quizhub_token';
+const USER_KEY = 'quizhub_user';
+
+const authToken = localStorage.getItem(TOKEN_KEY);
+if (!authToken) {
+    // Not logged in — bounce to the auth page.
+    window.location.replace('./login.html');
+}
+
+let currentUser = null;
+try {
+    currentUser = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+} catch {
+    currentUser = null;
+}
+
+function logout() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    window.location.replace('./login.html');
+}
+
 let nickname = '';
 let totalQuestions = 0;
 let currentQuestionIndex = 1;
 
-const startArea       = document.getElementById('startArea');
-const startBtn        = document.getElementById('startBtn');
-const nickInput       = document.getElementById('nickInput');
-const quizArea        = document.getElementById('quizArea');
-const resultArea      = document.getElementById('resultArea');
+const startArea         = document.getElementById('startArea');
+const startBtn          = document.getElementById('startBtn');
+const nickInput         = document.getElementById('nickInput');
+const quizArea          = document.getElementById('quizArea');
+const resultArea        = document.getElementById('resultArea');
 const questionContainer = document.getElementById('questionContainer');
-const submitBtn       = document.getElementById('submitBtn');
-const leaderboardList = document.getElementById('leaderboardList');
-const progressBar     = document.getElementById('progressBar');
-const progressLabel   = document.getElementById('progressLabel');
-const connectionDot   = document.getElementById('connectionDot');
+const submitBtn         = document.getElementById('submitBtn');
+const leaderboardList   = document.getElementById('leaderboardList');
+const progressBar       = document.getElementById('progressBar');
+const progressLabel     = document.getElementById('progressLabel');
+const connectionDot     = document.getElementById('connectionDot');
+const timerNumber       = document.getElementById('timerNumber');
+const timerFill         = document.getElementById('timerFill');
+
+// Prefill the nickname with the logged-in user's name.
+if (currentUser && currentUser.name) {
+    nickInput.value = currentUser.name;
+}
+
+// ===== TIMER =====
+let timerInterval = null;
+let timeLeft = QUESTION_TIME;
+
+function startTimer() {
+    stopTimer();
+    timeLeft = QUESTION_TIME;
+    renderTimer();
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+            renderTimer();
+            stopTimer();
+            handleTimeout();
+            return;
+        }
+        renderTimer();
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+function renderTimer() {
+    const display = Math.max(0, timeLeft);
+    timerNumber.textContent = display;
+    const pct = (display / QUESTION_TIME) * 100;
+    timerFill.style.width = `${pct}%`;
+    const urgent = display <= URGENT_THRESHOLD;
+    timerNumber.classList.toggle('urgent', urgent);
+    timerFill.classList.toggle('urgent', urgent);
+}
+
+function handleTimeout() {
+    const sel = document.querySelector('input[name="answer"]:checked');
+    if (sel) {
+        submitBtn.click();
+    } else {
+        submitAnswer(null);
+    }
+}
 
 // ===== SIGNALR =====
 const connection = new signalR.HubConnectionBuilder()
-    .withUrl("/quizHub")
+    .withUrl("/quizHub", { accessTokenFactory: () => localStorage.getItem(TOKEN_KEY) })
     .withAutomaticReconnect()
     .build();
 
+const prevScores = {};
+const knownPlayers = new Set();
+
 connection.on("BroadcastLeaderboard", items => {
-    // Сортуємо за кількістю правильних відповідей
     const sorted = [...items].sort((a, b) => b.correctAnswers - a.correctAnswers);
+
+    // FLIP: snapshot old positions before DOM swap
+    const oldPositions = {};
+    leaderboardList.querySelectorAll('.lb-item').forEach(el => {
+        const key = el.dataset.key;
+        if (key) oldPositions[key] = el.getBoundingClientRect().top;
+    });
+
     leaderboardList.innerHTML = '';
+
     sorted.forEach((it, i) => {
         const li = document.createElement('li');
         li.className = 'lb-item' + (it.nickname === nickname ? ' is-me' : '');
+        li.dataset.key = it.nickname;
+        const rank = String(i + 1).padStart(2, '0');
+        const prevScore = prevScores[it.nickname] ?? 0;
+        const delta = it.correctAnswers - prevScore;
+
         li.innerHTML = `
-            <span class="lb-rank">${i + 1}</span>
+            <span class="lb-rank">${rank}</span>
             <div class="lb-info">
                 <div class="lb-name">${escapeHtml(it.nickname)}</div>
-                <div class="lb-progress">Питання ${it.currentQuestionIndex} / ${it.totalQuestions}</div>
+                <div class="lb-progress">Q ${it.currentQuestionIndex}/${it.totalQuestions}</div>
             </div>
-            <span class="lb-score">${it.correctAnswers}</span>
+            <span class="lb-score-wrap">
+                <span class="lb-score">${it.correctAnswers}</span>
+                ${delta > 0 ? `<span class="lb-delta">+${delta}</span>` : ''}
+            </span>
         `;
+
+        if (!knownPlayers.has(it.nickname)) {
+            li.classList.add('is-new');
+            knownPlayers.add(it.nickname);
+        }
+
         leaderboardList.appendChild(li);
     });
+
+    // FLIP: invert, then play
+    leaderboardList.querySelectorAll('.lb-item').forEach(el => {
+        const key = el.dataset.key;
+        const oldTop = oldPositions[key];
+        if (oldTop === undefined) return;
+        const newTop = el.getBoundingClientRect().top;
+        const dy = oldTop - newTop;
+        if (dy === 0) return;
+        el.style.transform = `translateY(${dy}px)`;
+        requestAnimationFrame(() => {
+            el.classList.add('flip-animating');
+            el.style.transform = '';
+        });
+        el.addEventListener('transitionend', () => {
+            el.classList.remove('flip-animating');
+        }, { once: true });
+    });
+
+    // Animate score delta — show then fade
+    leaderboardList.querySelectorAll('.lb-delta').forEach(deltaEl => {
+        requestAnimationFrame(() => {
+            deltaEl.classList.add('show');
+            setTimeout(() => {
+                deltaEl.classList.remove('show');
+                deltaEl.classList.add('fade');
+            }, 900);
+        });
+    });
+
+    // Snapshot scores for next broadcast
+    sorted.forEach(it => { prevScores[it.nickname] = it.correctAnswers; });
 });
 
 connection.start()
     .then(() => connectionDot.classList.add('connected'))
     .catch(err => console.error('SignalR error:', err));
 
-// ===== СТАРТ =====
+// ===== START =====
 startBtn.addEventListener('click', async () => {
     nickname = nickInput.value.trim();
     if (!nickname) {
         nickInput.focus();
-        nickInput.style.borderColor = 'var(--error)';
-        setTimeout(() => nickInput.style.borderColor = '', 1000);
+        nickInput.classList.remove('shake');
+        void nickInput.offsetWidth;
+        nickInput.classList.add('shake');
         return;
     }
 
     startBtn.disabled = true;
-    startBtn.querySelector('span').textContent = 'Завантаження...';
+    startBtn.querySelector('span').textContent = 'Завантаження…';
 
     await connection.invoke("RegisterUser", quizId, nickname);
 
@@ -70,6 +207,7 @@ startBtn.addEventListener('click', async () => {
 
     startArea.classList.add('d-none');
     quizArea.classList.remove('d-none');
+    document.body.classList.add('quiz-active');
     updateProgress();
     renderQuestion(session.currentQuestion);
 });
@@ -78,7 +216,9 @@ nickInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') startBtn.click();
 });
 
-// ===== РЕНДЕР ПИТАННЯ =====
+// ===== RENDER QUESTION =====
+const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+
 function renderQuestion(q) {
     questionContainer.innerHTML = '';
 
@@ -98,92 +238,93 @@ function renderQuestion(q) {
         radio.name = 'answer';
         radio.value = a.text;
 
-        const radioCustom = document.createElement('span');
-        radioCustom.className = 'answer-radio-custom';
+        const letter = document.createElement('span');
+        letter.className = 'answer-letter';
+        letter.textContent = LETTERS[i] || String(i + 1);
 
         const text = document.createElement('span');
         text.className = 'answer-text';
         text.textContent = a.text;
 
-        label.appendChild(radio);
-        label.appendChild(radioCustom);
-        label.appendChild(text);
-
-        // Затримана поява варіантів
-        label.style.animationDelay = `${i * 60}ms`;
-        label.style.animation = 'fadeIn 0.3s ease both';
-
+        label.append(radio, letter, text);
         list.appendChild(label);
     });
 
-    questionContainer.appendChild(title);
-    questionContainer.appendChild(list);
-
+    questionContainer.append(title, list);
     submitBtn.disabled = false;
+    startTimer();
 }
 
-// ===== ВІДПРАВКА ВІДПОВІДІ =====
-submitBtn.addEventListener('click', async () => {
+// ===== SUBMIT =====
+submitBtn.addEventListener('click', () => {
     const sel = document.querySelector('input[name="answer"]:checked');
     if (!sel) return;
+    submitAnswer(sel.value);
+});
 
+async function submitAnswer(answerValue) {
+    stopTimer();
     submitBtn.disabled = true;
 
+    const list = document.querySelector('.answers-list');
+    if (list) list.classList.add('locked');
+
     try {
-        console.log('1. Відправка відповіді...');
         const res = await fetch(`/api/quiz/${quizId}/submit`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ answer: sel.value, nickname })
+            body: JSON.stringify({ answer: answerValue ?? '', nickname })
         });
         const data = await res.json();
-
-        console.log('Сирі дані з сервера:', data);
-
         const isCorrect = data.isCorrect === true || String(data.isCorrect).toLowerCase() === 'true';
 
-        console.log('2. Відповідь оброблено (boolean):', isCorrect);
-
         showFeedback(isCorrect);
+        flashSelectedRow(isCorrect);
 
-        console.log('3. Отримання стану...');
         const stateRes = await fetch(`/api/quiz/${quizId}?nickname=${encodeURIComponent(nickname)}`);
         const state = await stateRes.json();
-        console.log('4. Стан:', state);
         currentQuestionIndex = state.currentQuestionIndex;
 
         await connection.invoke("UpdateProgress", quizId, nickname, currentQuestionIndex, state.correctAnswers);
 
-        await new Promise(r => setTimeout(r, 700));
+        await new Promise(r => setTimeout(r, 900));
 
-        console.log('5. Запит наступного питання...');
         const nextRes = await fetch(`/api/quiz/${quizId}/next?nickname=${encodeURIComponent(nickname)}`);
-        console.log('6. Статус next:', nextRes.status, nextRes.ok);
-        
+
         if (nextRes.ok) {
             const nextQ = await nextRes.json();
-            console.log('7. Наступне питання:', nextQ);
             updateProgress();
             renderQuestion(nextQ);
         } else {
-            console.log('8. Показ результатів');
             showResult();
         }
     } catch (error) {
         console.error('Помилка:', error);
-        submitBtn.disabled = false; // Розблоковуємо кнопку при помилці
+        submitBtn.disabled = false;
+        if (list) list.classList.remove('locked');
     }
-});
+}
 
-// ===== ПРОГРЕС =====
+function flashSelectedRow(isCorrect) {
+    const selectedLabel = document.querySelector('.answer-label:has(input:checked)');
+    if (!selectedLabel) return;
+    selectedLabel.classList.add(isCorrect ? 'reveal-correct' : 'reveal-wrong');
+}
+
+// ===== PROGRESS =====
 function updateProgress() {
     const pct = ((currentQuestionIndex - 1) / totalQuestions) * 100;
     progressBar.style.width = `${pct}%`;
-    progressLabel.textContent = `${currentQuestionIndex} / ${totalQuestions}`;
+    const cur = String(currentQuestionIndex).padStart(2, '0');
+    const tot = String(totalQuestions).padStart(2, '0');
+    progressLabel.innerHTML = `Question <strong>${cur}</strong> &mdash; of ${tot}`;
 }
 
-// ===== РЕЗУЛЬТАТ =====
+// ===== RESULT =====
 async function showResult() {
+    stopTimer();
+    document.body.classList.remove('quiz-active');
+
     const res = await fetch(`/api/quiz/${quizId}?nickname=${encodeURIComponent(nickname)}`);
     const session = await res.json();
 
@@ -191,8 +332,10 @@ async function showResult() {
 
     const pct = session.correctAnswers / session.totalQuestions;
     document.getElementById('resultEmoji').textContent = pct >= 0.8 ? '🏆' : pct >= 0.5 ? '🎯' : '💪';
-    document.getElementById('resultScore').textContent = `${session.correctAnswers} / ${session.totalQuestions}`;
+    document.getElementById('resultScore').textContent = session.correctAnswers;
+    document.getElementById('resultScoreOf').textContent = `/ ${session.totalQuestions}`;
     document.getElementById('resultNick').textContent = nickname;
+    document.getElementById('resultPct').textContent = `${Math.round(pct * 100)}% correct`;
 
     quizArea.classList.add('d-none');
     resultArea.classList.remove('d-none');
@@ -207,7 +350,9 @@ function showFeedback(isCorrect) {
         document.body.appendChild(toastEl);
     }
     toastEl.className = `feedback-toast ${isCorrect ? 'correct' : 'wrong'}`;
-    toastEl.textContent = isCorrect ? '✓ Правильно!' : '✗ Неправильно';
+    toastEl.innerHTML = isCorrect
+        ? '<span class="mark">+</span> Правильно'
+        : '<span class="mark">&times;</span> Неправильно';
     requestAnimationFrame(() => toastEl.classList.add('show'));
     setTimeout(() => toastEl.classList.remove('show'), 1800);
 }
