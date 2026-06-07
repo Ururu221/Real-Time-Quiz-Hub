@@ -12,20 +12,6 @@ namespace RealTimeQuizHub.Repository
             _db = db;
         }
 
-        public async Task<UserScore> AddScoreAsync(UserScore score)
-        {
-            _db.UserScores.Add(score);
-            await _db.SaveChangesAsync();
-            return score;
-        }
-
-        public async Task<List<UserScore>> GetRoomScoresAsync(int roomId)
-        {
-            return await _db.UserScores
-                .Where(s => s.RoomId == roomId)
-                .ToListAsync();
-        }
-
         public async Task<UserStats?> GetStatsAsync(int userId)
         {
             return await _db.UserStats.FirstOrDefaultAsync(s => s.UserId == userId);

@@ -30,7 +30,7 @@ namespace RealTimeQuizHub.Tests.Controllers
             var firstWinId = BadgeCatalog.Seed.First(b => b.Name == BadgeCatalog.FirstWin).Id;
             badgeRepo.UserBadges.Add(new UserBadge { UserId = 2, BadgeId = firstWinId });
 
-            var service = new LeaderboardService(scoreRepo, badgeRepo);
+            var service = new LeaderboardService(scoreRepo, badgeRepo, new QuizLeaderboardStore());
             var controller = new LeaderboardController(service);
 
             var result = await controller.GetGlobal();
@@ -60,7 +60,7 @@ namespace RealTimeQuizHub.Tests.Controllers
         [Fact]
         public async Task GetGlobal_ReturnsEmptyList_WhenNoStats()
         {
-            var service = new LeaderboardService(new FakeScoreRepository(), new FakeBadgeRepository());
+            var service = new LeaderboardService(new FakeScoreRepository(), new FakeBadgeRepository(), new QuizLeaderboardStore());
             var controller = new LeaderboardController(service);
 
             var result = await controller.GetGlobal();

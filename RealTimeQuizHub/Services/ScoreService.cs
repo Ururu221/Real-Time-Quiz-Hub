@@ -8,16 +8,19 @@ namespace RealTimeQuizHub.Services
     public class ScoreService : IScoreService
     {
         private readonly IScoreRepository _scoreRepository;
-        private readonly IRoomRepository _roomRepository;
+        private readonly IQuizRepository _quizRepository;
         private readonly IBadgeService _badgeService;
+        private readonly IQuizLeaderboardStore _quizLeaderboard;
 
         public ScoreService(IScoreRepository scoreRepository,
-                            IRoomRepository roomRepository,
-                            IBadgeService badgeService)
+                            IQuizRepository quizRepository,
+                            IBadgeService badgeService,
+                            IQuizLeaderboardStore quizLeaderboard)
         {
             _scoreRepository = scoreRepository;
-            _roomRepository = roomRepository;
+            _quizRepository = quizRepository;
             _badgeService = badgeService;
+            _quizLeaderboard = quizLeaderboard;
         }
 
         // bonus = base * impact * (timeRemaining / secondsPerQuestion)
@@ -38,7 +41,7 @@ namespace RealTimeQuizHub.Services
             return baseScore + (int)Math.Round(bonus, MidpointRounding.AwayFromZero);
         }
 
-        public int CalculateSessionScore(Room room, IEnumerable<AnswerResultDto> answers)
+        public int CalculateSessionScore(Quiz quiz, IEnumerable<AnswerResultDto> answers)
         {
             var total = 0;
             foreach (var answer in answers)
@@ -48,10 +51,10 @@ namespace RealTimeQuizHub.Services
                     continue;
                 }
                 total += CalculateAnswerScore(
-                    room.HasTimer,
-                    room.TimerScoreImpact,
+                    quiz.HasTimer,
+                    quiz.TimerScoreImpact,
                     answer.TimeRemaining,
-                    room.TimerSecondsPerQuestion);
+                    quiz.TimerSecondsPerQuestion);
             }
             return total;
         }
@@ -63,25 +66,18 @@ namespace RealTimeQuizHub.Services
                 throw new ArgumentNullException(nameof(dto));
             }
 
-            var room = await _roomRepository.GetByIdAsync(dto.RoomId);
-            if (room == null)
+            var quiz = await _quizRepository.GetByIdAsync(dto.QuizId);
+            if (quiz == null)
             {
-                throw new ArgumentException($"Room with ID {dto.RoomId} does not exist.", nameof(dto));
+                throw new ArgumentException($"Quiz with ID {dto.QuizId} does not exist.", nameof(dto));
             }
 
             var answers = dto.Answers ?? new List<AnswerResultDto>();
-            var score = CalculateSessionScore(room, answers);
+            var score = CalculateSessionScore(quiz, answers);
 
-            // Persist this session's score first so the ranking query sees it.
-            await _scoreRepository.AddScoreAsync(new UserScore
-            {
-                UserId = userId,
-                RoomId = room.Id,
-                Score = score,
-                CompletedAt = DateTime.UtcNow
-            });
-
-            var rank = await ComputeRankAsync(room.Id, userId);
+            // Per-quiz leaderboard lives in memory only — record there and let it
+            // return this user's rank within THIS quiz.
+            var rank = _quizLeaderboard.Record(quiz.Id, userId, score, DateTime.UtcNow);
             var isWin = rank == 1;
             var perfectScore = answers.Count > 0 && answers.All(a => a.IsCorrect);
 
@@ -91,7 +87,7 @@ namespace RealTimeQuizHub.Services
             {
                 UserId = userId,
                 WonThisGame = isWin,
-                TimerRoom = room.HasTimer,
+                TimerRoom = quiz.HasTimer,
                 PerfectScore = perfectScore
             });
 
@@ -111,24 +107,6 @@ namespace RealTimeQuizHub.Services
                     IconEmoji = b.IconEmoji
                 }).ToList()
             };
-        }
-
-        // Rank a user by their best score among the distinct players in the room.
-        private async Task<int> ComputeRankAsync(int roomId, int userId)
-        {
-            var scores = await _scoreRepository.GetRoomScoresAsync(roomId);
-            var bestPerUser = scores
-                .GroupBy(s => s.UserId)
-                .ToDictionary(g => g.Key, g => g.Max(s => s.Score));
-
-            if (!bestPerUser.TryGetValue(userId, out var myBest))
-            {
-                return 1;
-            }
-
-            // Rank = how many distinct users scored strictly higher, plus one.
-            var ahead = bestPerUser.Count(kv => kv.Key != userId && kv.Value > myBest);
-            return ahead + 1;
         }
 
         private async Task<UserStats> UpdateStatsAsync(int userId, int score, bool isWin)

@@ -39,8 +39,8 @@ namespace RealTimeQuizHub.Controllers
             {
                 var result = await _scoreService.RecordCompletionAsync(userId, dto);
                 _logger.LogInformation(
-                    "User {UserId} completed room {RoomId}: {Score} pts, rank {Rank}",
-                    userId, dto.RoomId, result.Score, result.Rank);
+                    "User {UserId} completed quiz {QuizId}: {Score} pts, rank {Rank}",
+                    userId, dto.QuizId, result.Score, result.Rank);
                 return Ok(result);
             }
             catch (ArgumentException ex)

@@ -121,7 +121,7 @@ async function renderGlobalLeaderboard() {
                 <span class="lb-rank">${String(i + 1).padStart(2, '0')}</span>
                 <div class="lb-info">
                     ${playerNameWithTooltip(e)}
-                    <div class="lb-progress">${escapeHtml(e.level)}</div>
+                    <div class="lb-progress">${escapeHtml(e.level)} · ${formatViktoryn(e.quizzesCompleted)}</div>
                 </div>
                 <span class="lb-score-wrap"><span class="lb-score">${e.totalScore}</span></span>
             </li>

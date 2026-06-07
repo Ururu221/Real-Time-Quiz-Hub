@@ -2,14 +2,10 @@ using RealTimeQuizHub.Models;
 
 namespace RealTimeQuizHub.Repository.Interfaces
 {
+    // Persists the GLOBAL leaderboard data (user_stats) in PostgreSQL. Per-quiz
+    // standings are NOT stored here — they live in IQuizLeaderboardStore (memory).
     public interface IScoreRepository
     {
-        // Persists a finished session's score row.
-        Task<UserScore> AddScoreAsync(UserScore score);
-
-        // All score rows for a room (used to compute per-room ranking).
-        Task<List<UserScore>> GetRoomScoresAsync(int roomId);
-
         // Aggregated stats for a single user (null if they have none yet).
         Task<UserStats?> GetStatsAsync(int userId);
 

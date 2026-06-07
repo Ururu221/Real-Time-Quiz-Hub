@@ -2,9 +2,6 @@
 // legacy single-session id so older links keep working.
 const params = new URLSearchParams(window.location.search);
 const quizId = params.get('quizId') || params.get('id') || 'default-session';
-// When the quiz is played inside a room (?roomId=N), finishing records a score
-// and unlocks the room leaderboard / badges on the result screen.
-const roomId = params.get('roomId');
 let QUESTION_TIME = 30;
 const URGENT_THRESHOLD = 10;
 
@@ -51,7 +48,7 @@ let nickname = '';
 let totalQuestions = 0;
 let currentQuestionIndex = 1;
 
-// Per-answer results collected over the session, used to record the room score.
+// Per-answer results collected over the session, used to record the quiz score.
 const answerResults = [];
 
 const startArea         = document.getElementById('startArea');
@@ -368,14 +365,14 @@ async function showResult() {
     quizArea.classList.add('d-none');
     resultArea.classList.remove('d-none');
 
-    // Inside a room: persist the score, surface points + new badges, and show
-    // the room leaderboard. Plain quiz play (no roomId) skips all of this.
-    if (roomId && /^\d+$/.test(roomId)) {
-        await recordRoomCompletion();
+    // Persist the score, surface points + new badges, and show the quiz
+    // leaderboard. Only real quizzes (numeric id) are recorded.
+    if (/^\d+$/.test(quizId)) {
+        await recordQuizCompletion();
     }
 }
 
-async function recordRoomCompletion() {
+async function recordQuizCompletion() {
     try {
         const res = await fetch('/api/scores/complete', {
             method: 'POST',
@@ -383,7 +380,7 @@ async function recordRoomCompletion() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
             },
-            body: JSON.stringify({ roomId: Number(roomId), answers: answerResults })
+            body: JSON.stringify({ quizId: Number(quizId), answers: answerResults })
         });
         if (res.ok) {
             const result = await res.json();
@@ -393,7 +390,7 @@ async function recordRoomCompletion() {
         console.error('Не вдалося зберегти результат:', err);
     }
 
-    await renderRoomLeaderboard();
+    await renderQuizLeaderboard();
 }
 
 function showPointsAndBadges(result) {
@@ -411,9 +408,9 @@ function showPointsAndBadges(result) {
     }
 }
 
-async function renderRoomLeaderboard() {
+async function renderQuizLeaderboard() {
     try {
-        const res = await fetch(`/api/leaderboard/room/${roomId}`, {
+        const res = await fetch(`/api/quizzes/${quizId}/leaderboard`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
         });
         if (!res.ok) return;
@@ -421,7 +418,7 @@ async function renderRoomLeaderboard() {
         const entries = await res.json();
         if (!entries.length) return;
 
-        const list = document.getElementById('roomLeaderboard');
+        const list = document.getElementById('quizLeaderboard');
         list.innerHTML = entries.map((e, i) => `
             <li class="lb-item">
                 <span class="lb-rank">${String(i + 1).padStart(2, '0')}</span>
@@ -432,9 +429,9 @@ async function renderRoomLeaderboard() {
                 <span class="lb-score-wrap"><span class="lb-score">${e.score}</span></span>
             </li>
         `).join('');
-        document.getElementById('roomLeaderboardWrap').classList.remove('d-none');
+        document.getElementById('quizLeaderboardWrap').classList.remove('d-none');
     } catch (err) {
-        console.error('Не вдалося завантажити рейтинг кімнати:', err);
+        console.error('Не вдалося завантажити рейтинг вікторини:', err);
     }
 }
 

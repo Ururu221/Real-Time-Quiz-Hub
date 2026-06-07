@@ -3,22 +3,10 @@ using RealTimeQuizHub.Repository.Interfaces;
 
 namespace RealTimeQuizHub.Tests.Fakes
 {
-    // ===== In-memory IScoreRepository =====
+    // ===== In-memory IScoreRepository (global stats only) =====
     public class FakeScoreRepository : IScoreRepository
     {
-        public readonly List<UserScore> Scores = new();
         public readonly Dictionary<int, UserStats> Stats = new();
-        private int _nextId = 1;
-
-        public Task<UserScore> AddScoreAsync(UserScore score)
-        {
-            score.Id = _nextId++;
-            Scores.Add(score);
-            return Task.FromResult(score);
-        }
-
-        public Task<List<UserScore>> GetRoomScoresAsync(int roomId)
-            => Task.FromResult(Scores.Where(s => s.RoomId == roomId).ToList());
 
         public Task<UserStats?> GetStatsAsync(int userId)
             => Task.FromResult(Stats.TryGetValue(userId, out var s) ? s : null);
@@ -91,25 +79,27 @@ namespace RealTimeQuizHub.Tests.Fakes
         }
     }
 
-    // ===== In-memory IRoomRepository (only GetByIdAsync is exercised by scoring) =====
-    public class FakeRoomRepositoryForScoring : IRoomRepository
+    // ===== In-memory IQuizRepository (only GetByIdAsync is exercised by scoring) =====
+    public class FakeQuizRepository : IQuizRepository
     {
-        private readonly Dictionary<int, Room> _rooms = new();
+        private readonly Dictionary<int, Quiz> _quizzes = new();
 
-        public void Add(Room room) => _rooms[room.Id] = room;
+        public void Add(Quiz quiz) => _quizzes[quiz.Id] = quiz;
 
-        public Task<Room?> GetByIdAsync(int id)
-            => Task.FromResult(_rooms.TryGetValue(id, out var r) ? r : null);
+        public Task<Quiz?> GetByIdAsync(int id)
+            => Task.FromResult(_quizzes.TryGetValue(id, out var q) ? q : null);
 
-        public Task<List<Room>> GetAllActiveAsync()
-            => Task.FromResult(_rooms.Values.Where(r => r.IsActive).ToList());
+        public Task<List<Quiz>> GetAllAsync()
+            => Task.FromResult(_quizzes.Values.ToList());
 
-        public Task<Room> AddAsync(Room room)
+        public Task<Quiz> AddAsync(Quiz quiz)
         {
-            _rooms[room.Id] = room;
-            return Task.FromResult(room);
+            _quizzes[quiz.Id] = quiz;
+            return Task.FromResult(quiz);
         }
 
-        public Task<bool> DeleteAsync(int id) => Task.FromResult(_rooms.Remove(id));
+        public Task<bool> ExistsAsync(int id) => Task.FromResult(_quizzes.ContainsKey(id));
+
+        public Task<bool> DeleteAsync(int id) => Task.FromResult(_quizzes.Remove(id));
     }
 }

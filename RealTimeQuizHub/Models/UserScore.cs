@@ -1,13 +1,13 @@
 namespace RealTimeQuizHub.Models
 {
-    // One row per finished quiz session: how many points a user earned in a room.
+    // One row per finished quiz session: how many points a user earned in a quiz.
     public class UserScore
     {
         public int Id { get; set; }
 
         public int UserId { get; set; }
 
-        public int RoomId { get; set; }
+        public int QuizId { get; set; }
 
         public int Score { get; set; }
 
@@ -15,6 +15,6 @@ namespace RealTimeQuizHub.Models
 
         public User? User { get; set; }
 
-        public Room? Room { get; set; }
+        public Quiz? Quiz { get; set; }
     }
 }

@@ -11,7 +11,6 @@ namespace RealTimeQuizHub
         public DbSet<Question> Questions { get; set; } = null!;
         public DbSet<Answer> Answers { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
-        public DbSet<Room> Rooms { get; set; } = null!;
         public DbSet<Quiz> Quizzes { get; set; } = null!;
         public DbSet<QuizQuestion> QuizQuestions { get; set; } = null!;
         public DbSet<UserScore> UserScores { get; set; } = null!;
@@ -85,25 +84,8 @@ namespace RealTimeQuizHub
                 entity.HasIndex(qq => new { qq.QuizId, qq.QuestionId });
             });
 
-            modelBuilder.Entity<Room>(entity =>
-            {
-                entity.HasKey(r => r.Id);
-                entity.Property(r => r.Name)
-                    .IsRequired()
-                    .HasMaxLength(100);
-                entity.Property(r => r.Description)
-                    .HasMaxLength(500);
-                entity.Property(r => r.IsActive)
-                    .IsRequired()
-                    .HasDefaultValue(true);
-                entity.Property(r => r.TimerSecondsPerQuestion)
-                    .HasDefaultValue(30);
-
-                entity.HasOne(r => r.Quiz)
-                    .WithMany()
-                    .HasForeignKey(r => r.QuizId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
+            // NOTE: the `rooms` table is intentionally left in the database but is no
+            // longer mapped — the platform now works with quizzes only.
 
             modelBuilder.Entity<UserScore>(entity =>
             {
@@ -115,13 +97,13 @@ namespace RealTimeQuizHub
                     .HasForeignKey(s => s.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(s => s.Room)
+                entity.HasOne(s => s.Quiz)
                     .WithMany()
-                    .HasForeignKey(s => s.RoomId)
+                    .HasForeignKey(s => s.QuizId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasIndex(s => s.RoomId);
-                entity.HasIndex(s => new { s.UserId, s.RoomId });
+                entity.HasIndex(s => s.QuizId);
+                entity.HasIndex(s => new { s.UserId, s.QuizId });
             });
 
             modelBuilder.Entity<UserStats>(entity =>

@@ -74,16 +74,18 @@ namespace RealTimeQuizHub
             builder.Services.AddScoped<IAnswerService, AnswerService>();
             builder.Services.AddScoped<IQuestionService, QuestionService>();
             builder.Services.AddScoped<IQuizService, QuizService>();
-            builder.Services.AddScoped<IRoomService, RoomService>();
             builder.Services.AddScoped<IScoreService, ScoreService>();
             builder.Services.AddScoped<IBadgeService, BadgeService>();
             builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
+
+            // Per-quiz leaderboards are kept in memory only (reset on restart);
+            // a singleton keeps them alive for the lifetime of the process.
+            builder.Services.AddSingleton<IQuizLeaderboardStore, QuizLeaderboardStore>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
             builder.Services.AddScoped<IAnswerRepository, AnswerRepository>();
             builder.Services.AddScoped<IQuizRepository, QuizRepository>();
-            builder.Services.AddScoped<IRoomRepository, RoomRepository>();
             builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
             builder.Services.AddScoped<IBadgeRepository, BadgeRepository>();
 
@@ -136,6 +138,16 @@ namespace RealTimeQuizHub
 
 
             var app = builder.Build();
+
+            // One-off sample-data seeding: `dotnet run -- seed`. Seeds quizzes then exits.
+            if (args.Contains("seed", StringComparer.OrdinalIgnoreCase))
+            {
+                using var scope = app.Services.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var added = Data.QuizSeeder.Seed(db);
+                Console.WriteLine($"Seeded {added} new quiz(zes).");
+                return;
+            }
 
 
             app.MapHub<QuizHub>("/quizHub");

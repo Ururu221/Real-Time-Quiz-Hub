@@ -9,11 +9,15 @@ namespace RealTimeQuizHub.Services
     {
         private readonly IScoreRepository _scoreRepository;
         private readonly IBadgeRepository _badgeRepository;
+        private readonly IQuizLeaderboardStore _quizLeaderboard;
 
-        public LeaderboardService(IScoreRepository scoreRepository, IBadgeRepository badgeRepository)
+        public LeaderboardService(IScoreRepository scoreRepository,
+                                  IBadgeRepository badgeRepository,
+                                  IQuizLeaderboardStore quizLeaderboard)
         {
             _scoreRepository = scoreRepository;
             _badgeRepository = badgeRepository;
+            _quizLeaderboard = quizLeaderboard;
         }
 
         public async Task<List<LeaderboardEntryDto>> GetGlobalLeaderboardAsync(int top = 20)
@@ -38,39 +42,36 @@ namespace RealTimeQuizHub.Services
             }).ToList();
         }
 
-        public async Task<List<RoomLeaderboardEntryDto>> GetRoomLeaderboardAsync(int roomId)
+        public async Task<List<QuizLeaderboardEntryDto>> GetQuizLeaderboardAsync(int quizId, int top = 20)
         {
-            var scores = await _scoreRepository.GetRoomScoresAsync(roomId);
-            if (scores.Count == 0)
+            // Per-quiz standings come from the in-memory store (RAM, per quiz).
+            var entries = _quizLeaderboard.GetTop(quizId, top);
+            if (entries.Count == 0)
             {
-                return new List<RoomLeaderboardEntryDto>();
+                return new List<QuizLeaderboardEntryDto>();
             }
 
-            // Each participant keeps their best score in this room.
-            var bestPerUser = scores
-                .GroupBy(s => s.UserId)
-                .Select(g => new { UserId = g.Key, Score = g.Max(s => s.Score) })
-                .OrderByDescending(x => x.Score)
-                .ToList();
-
-            var userIds = bestPerUser.Select(x => x.UserId).ToList();
+            // Enrich each row with the player's global profile (name, level, badges)
+            // which IS persisted in the database.
+            var userIds = entries.Select(e => e.UserId).ToList();
             var statsByUser = (await _scoreRepository.GetStatsForUsersAsync(userIds))
                 .ToDictionary(s => s.UserId);
             var badgesByUser = await _badgeRepository.GetBadgesForUsersAsync(userIds);
 
-            return bestPerUser.Select(x =>
+            return entries.Select(e =>
             {
-                statsByUser.TryGetValue(x.UserId, out var stats);
-                return new RoomLeaderboardEntryDto
+                statsByUser.TryGetValue(e.UserId, out var stats);
+                return new QuizLeaderboardEntryDto
                 {
-                    UserId = x.UserId,
+                    UserId = e.UserId,
                     Name = stats?.User?.Name ?? string.Empty,
-                    Score = x.Score,
+                    Score = e.Score,
+                    CompletedAt = e.CompletedAt,
                     TotalScore = stats?.TotalScore ?? 0,
                     Level = LevelHelper.GetLevel(stats?.TotalScore ?? 0),
                     QuizzesCompleted = stats?.QuizzesCompleted ?? 0,
                     Wins = stats?.Wins ?? 0,
-                    Badges = ToBadgeDtos(badgesByUser, x.UserId)
+                    Badges = ToBadgeDtos(badgesByUser, e.UserId)
                 };
             }).ToList();
         }

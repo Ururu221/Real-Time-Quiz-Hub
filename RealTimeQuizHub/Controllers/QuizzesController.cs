@@ -12,11 +12,15 @@ namespace RealTimeQuizHub.Controllers
     public class QuizzesController : ControllerBase
     {
         private readonly IQuizService _quizService;
+        private readonly ILeaderboardService _leaderboardService;
         private readonly ILogger<QuizzesController> _logger;
 
-        public QuizzesController(IQuizService quizService, ILogger<QuizzesController> logger)
+        public QuizzesController(IQuizService quizService,
+                                 ILeaderboardService leaderboardService,
+                                 ILogger<QuizzesController> logger)
         {
             _quizService = quizService;
+            _leaderboardService = leaderboardService;
             _logger = logger;
         }
 
@@ -38,6 +42,14 @@ namespace RealTimeQuizHub.Controllers
                 return NotFound(new { message = "Вікторину не знайдено." });
             }
             return Ok(quiz);
+        }
+
+        // GET /api/quizzes/{id}/leaderboard — top 20 scores for this quiz.
+        [HttpGet("{id}/leaderboard")]
+        public async Task<IActionResult> GetLeaderboard(int id)
+        {
+            var entries = await _leaderboardService.GetQuizLeaderboardAsync(id, 20);
+            return Ok(entries);
         }
 
         // POST /api/quizzes — create a quiz with new questions and answers (admins only).

@@ -69,8 +69,19 @@ function formatPytannia(n) {
     return `${n} питань`;
 }
 
+// Ukrainian plural for "вікторина" (quiz):
+//   1 → "вікторина", 2–4 → "вікторини", 5+ and 11–19 → "вікторин".
+function formatViktoryn(n) {
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod100 >= 11 && mod100 <= 19) return `${n} вікторин`;
+    if (mod10 === 1) return `${n} вікторина`;
+    if (mod10 >= 2 && mod10 <= 4) return `${n} вікторини`;
+    return `${n} вікторин`;
+}
+
 // ===== LEADERBOARD / PLAYER TOOLTIP HELPERS =====
-// Shared by the global lobby leaderboard and the room result leaderboard.
+// Shared by the global lobby leaderboard and the quiz result leaderboard.
 
 // A username chip that reveals a profile tooltip on hover/focus.
 // `entry` carries: name, level, totalScore, quizzesCompleted, wins, badges[].

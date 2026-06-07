@@ -23,13 +23,5 @@ namespace RealTimeQuizHub.Controllers
             var entries = await _leaderboardService.GetGlobalLeaderboardAsync(20);
             return Ok(entries);
         }
-
-        // GET /api/leaderboard/room/{roomId} — participants of one room, ranked.
-        [HttpGet("room/{roomId}")]
-        public async Task<IActionResult> GetRoom(int roomId)
-        {
-            var entries = await _leaderboardService.GetRoomLeaderboardAsync(roomId);
-            return Ok(entries);
-        }
     }
 }
