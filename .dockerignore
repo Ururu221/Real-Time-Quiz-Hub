@@ -1,0 +1,25 @@
+# Frontend SPA folder is not part of the ASP.NET Core image
+clientapp/
+
+# Build artifacts
+**/bin/
+**/obj/
+
+# Git metadata
+**/.git/
+.git/
+.gitignore
+
+# IDE / editor
+**/.vs/
+**/.vscode/
+**/.idea/
+*.user
+
+# Test output
+TestResults/
+RealTimeQuizHub.Tests/
+
+# Local secrets and Docker files (keep secrets out of the build context)
+.env
+docker-compose*.yml
