@@ -13,5 +13,8 @@
         public int TotalQuestions { get; set; } = 0;
 
         public int CorrectAnswers { get; set; } = 0;
+
+        // The ordered questions belonging to this quiz, loaded once at start.
+        public List<Question> Questions { get; set; } = new List<Question>();
     }
 }

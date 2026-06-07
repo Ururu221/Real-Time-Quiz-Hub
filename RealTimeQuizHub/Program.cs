@@ -1,14 +1,15 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using RealTimeQuizHub.Hubs;
+using RealTimeQuizHub.Models;
+using RealTimeQuizHub.Repository;
+using RealTimeQuizHub.Repository.Interfaces;
 using RealTimeQuizHub.Services;
 using RealTimeQuizHub.Services.Interfaces;
-using RealTimeQuizHub.Models;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using RealTimeQuizHub.Repository.Interfaces;
-using RealTimeQuizHub.Repository;
-using RealTimeQuizHub.Hubs;
 
 namespace RealTimeQuizHub
 {
@@ -24,7 +25,35 @@ namespace RealTimeQuizHub
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                // 1. Описуємо схему авторизації (як Swagger має передавати токен)
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Введіть токен у форматі: Bearer {ваш_токен}"
+                });
+
+                // 2. Додаємо глобальну вимогу авторизації для захищених ендпоінтів
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>() // Порожній масив означає, що специфічні scopes не вимагаються
+                    }
+                });
+            });
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -44,10 +73,19 @@ namespace RealTimeQuizHub
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IAnswerService, AnswerService>();
             builder.Services.AddScoped<IQuestionService, QuestionService>();
+            builder.Services.AddScoped<IQuizService, QuizService>();
+            builder.Services.AddScoped<IRoomService, RoomService>();
+            builder.Services.AddScoped<IScoreService, ScoreService>();
+            builder.Services.AddScoped<IBadgeService, BadgeService>();
+            builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
             builder.Services.AddScoped<IAnswerRepository, AnswerRepository>();
+            builder.Services.AddScoped<IQuizRepository, QuizRepository>();
+            builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+            builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
+            builder.Services.AddScoped<IBadgeRepository, BadgeRepository>();
 
             builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 

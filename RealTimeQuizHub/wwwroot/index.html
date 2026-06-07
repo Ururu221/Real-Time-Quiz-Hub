@@ -3,101 +3,59 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>QuizHub</title>
+    <title>QuizHub — Вікторини</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
-
-    <div class="top-progress" id="topProgress">
-        <div class="top-progress-fill" id="progressBar"></div>
-    </div>
 
     <div class="wrapper">
 
         <header class="header">
             <div class="logo">Quiz<span>Hub</span></div>
             <div class="header-right">
+                <span class="user-tag" id="userTag"></span>
                 <button type="button" class="logout-btn" onclick="logout()">Вийти</button>
-                <div class="connection-dot" id="connectionDot" title="Підключення"></div>
             </div>
         </header>
 
-        <!-- Екран входу -->
-        <section id="startArea" class="screen screen--start">
-            <span class="eyebrow eyebrow--live start-eyebrow">
-                <span class="dot"></span> Live quiz &mdash; No. 01
-            </span>
-            <h1 class="start-title">Готовий<br>до бою?</h1>
-            <p class="start-sub">Введи нік і приєднуйся до вікторини. Грай у реальному часі проти всіх онлайн.</p>
-            <div class="input-wrap">
-                <input type="text" id="nickInput" class="nick-input" placeholder="Твій нікнейм" maxlength="20" autocomplete="off" />
-            </div>
-            <button id="startBtn" class="btn">
-                <span>Почати</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </button>
-        </section>
+        <section class="lobby">
 
-        <!-- Екран квізу -->
-        <section id="quizArea" class="screen screen--quiz d-none">
-            <div class="quiz-layout">
+            <div class="lobby-grid">
 
-                <div class="quiz-main">
-                    <div class="quiz-meta">
-                        <span class="progress-label" id="progressLabel">Question <strong>01</strong> &mdash; of 10</span>
-                    </div>
-
-                    <div class="timer-wrap" id="timerWrap">
-                        <span class="timer-number" id="timerNumber">30</span>
-                        <div class="timer-track">
-                            <div class="timer-fill" id="timerFill"></div>
+                <!-- Quizzes column -->
+                <div class="lobby-main">
+                    <div class="lobby-head">
+                        <div>
+                            <span class="eyebrow start-eyebrow"><span class="dot"></span> Вікторини</span>
+                            <h1 class="lobby-title">Доступні вікторини</h1>
                         </div>
+                        <a href="./create-quiz.html" id="createQuizBtn" class="btn btn--sm d-none">
+                            <span>+ Створити вікторину</span>
+                        </a>
                     </div>
 
-                    <div id="questionContainer" class="question-container"></div>
-
-                    <button id="submitBtn" class="btn btn-submit">
-                        <span>Відповісти</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </button>
+                    <div id="quizzesState" class="lobby-state">Завантаження вікторин…</div>
+                    <div id="quizzesGrid" class="rooms-grid"></div>
                 </div>
 
-                <aside class="leaderboard-panel">
+                <!-- Global leaderboard widget -->
+                <aside class="leaderboard-panel lobby-lb">
                     <div class="lb-header">
-                        <span class="lb-title">Leaderboard</span>
-                        <span class="lb-live">Live</span>
+                        <span class="lb-title">Глобальний рейтинг</span>
+                        <span class="lb-live">Топ 10</span>
                     </div>
-                    <ul class="lb-list" id="leaderboardList"></ul>
+                    <ul class="lb-list" id="globalLeaderboard"></ul>
+                    <p class="lb-note">Дані будуть підключені пізніше.</p>
                 </aside>
 
             </div>
-        </section>
 
-        <!-- Екран результату -->
-        <section id="resultArea" class="screen screen--result d-none">
-            <span class="eyebrow result-eyebrow">
-                <span id="resultEmoji" class="result-mark">🏆</span>
-                Final score
-            </span>
-            <h2 class="result-title">Квіз<br>завершено.</h2>
-            <div class="result-score-wrap">
-                <span class="result-score" id="resultScore">0</span>
-                <span class="result-score-of" id="resultScoreOf">/ 0</span>
-            </div>
-            <div class="result-meta">
-                <span>Player &mdash; <strong id="resultNick"></strong></span>
-                <span id="resultPct">0%</span>
-            </div>
-            <button class="btn btn--ghost" onclick="location.reload()">
-                <span>Грати знову</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-            </button>
         </section>
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
-    <script src="./js/script.js"></script>
+    <script src="./js/common.js"></script>
+    <script src="./js/quizzes.js"></script>
 </body>
 </html>

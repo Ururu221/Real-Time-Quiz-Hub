@@ -9,6 +9,7 @@ namespace RealTimeQuizHub.Tests.Services
     public class QuizSessionServiceTests : IDisposable
     {
         private readonly Mock<IQuestionService> _questionServiceMock;
+        private readonly Mock<IQuizService> _quizServiceMock;
         private readonly QuizSessionService _service;
 
         // Тестові дані
@@ -56,7 +57,9 @@ namespace RealTimeQuizHub.Tests.Services
                 .Setup(s => s.GetQuestionByIdAsync(It.IsAny<int>()))
                 .ReturnsAsync((int id) => _fakeQuestions.First(q => q.Id == id));
 
-            _service = new QuizSessionService(_questionServiceMock.Object);
+            _quizServiceMock = new Mock<IQuizService>();
+
+            _service = new QuizSessionService(_questionServiceMock.Object, _quizServiceMock.Object);
         }
 
         // Очищення статичного словника між тестами
@@ -100,6 +103,32 @@ namespace RealTimeQuizHub.Tests.Services
             await _service.StartQuizAsync("quiz1", "Alice");
 
             _questionServiceMock.Verify(s => s.GetAllQuestionsAsync(), Times.Once);
+        }
+
+        // ===== Per-quiz question loading (fix 1.1) =====
+
+        [Fact]
+        public async Task StartQuizAsync_ЗЧисловимId_МаєЗавантажитиЛишеПитанняЦієїВікторини()
+        {
+            // A numeric quizId must load only that quiz's questions via the join,
+            // NOT every question in the database.
+            var quizOnly = new List<Question>
+            {
+                new Question { Id = 10, Name = "Питання вікторини 5",
+                    Answers = new List<Answer> { new Answer { Text = "A", IsCorrect = true } } },
+                new Question { Id = 11, Name = "Друге питання вікторини 5",
+                    Answers = new List<Answer> { new Answer { Text = "B", IsCorrect = true } } }
+            };
+            _quizServiceMock
+                .Setup(s => s.GetQuizQuestionsAsync(5))
+                .ReturnsAsync(quizOnly);
+
+            var session = await _service.StartQuizAsync("5", "Alice");
+
+            Assert.Equal(2, session.TotalQuestions);
+            Assert.Equal("Питання вікторини 5", session.CurrentQuestion.Name);
+            _quizServiceMock.Verify(s => s.GetQuizQuestionsAsync(5), Times.Once);
+            _questionServiceMock.Verify(s => s.GetAllQuestionsAsync(), Times.Never);
         }
 
         // ===== GetQuizSessionAsync =====

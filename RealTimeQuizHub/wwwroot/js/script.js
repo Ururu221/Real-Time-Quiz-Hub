@@ -1,5 +1,11 @@
-const quizId = 'default-session';
-const QUESTION_TIME = 30;
+// Quiz id is passed from the quiz list page (?quizId=ID); fall back to the
+// legacy single-session id so older links keep working.
+const params = new URLSearchParams(window.location.search);
+const quizId = params.get('quizId') || params.get('id') || 'default-session';
+// When the quiz is played inside a room (?roomId=N), finishing records a score
+// and unlocks the room leaderboard / badges on the result screen.
+const roomId = params.get('roomId');
+let QUESTION_TIME = 30;
 const URGENT_THRESHOLD = 10;
 
 // ===== AUTH GUARD =====
@@ -19,6 +25,22 @@ try {
     currentUser = null;
 }
 
+// Match the countdown to this quiz's configured timer (if it has one).
+(async () => {
+    if (!/^\d+$/.test(quizId)) return;
+    try {
+        const res = await fetch(`/api/quizzes/${quizId}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+            const quiz = await res.json();
+            if (quiz.hasTimer && quiz.timerSecondsPerQuestion > 0) {
+                QUESTION_TIME = quiz.timerSecondsPerQuestion;
+            }
+        }
+    } catch { /* keep default */ }
+})();
+
 function logout() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
@@ -28,6 +50,9 @@ function logout() {
 let nickname = '';
 let totalQuestions = 0;
 let currentQuestionIndex = 1;
+
+// Per-answer results collected over the session, used to record the room score.
+const answerResults = [];
 
 const startArea         = document.getElementById('startArea');
 const startBtn          = document.getElementById('startBtn');
@@ -278,6 +303,9 @@ async function submitAnswer(answerValue) {
         const data = await res.json();
         const isCorrect = data.isCorrect === true || String(data.isCorrect).toLowerCase() === 'true';
 
+        // Capture correctness + seconds left for server-side score calculation.
+        answerResults.push({ isCorrect, timeRemaining: Math.max(0, timeLeft) });
+
         showFeedback(isCorrect);
         flashSelectedRow(isCorrect);
 
@@ -339,6 +367,104 @@ async function showResult() {
 
     quizArea.classList.add('d-none');
     resultArea.classList.remove('d-none');
+
+    // Inside a room: persist the score, surface points + new badges, and show
+    // the room leaderboard. Plain quiz play (no roomId) skips all of this.
+    if (roomId && /^\d+$/.test(roomId)) {
+        await recordRoomCompletion();
+    }
+}
+
+async function recordRoomCompletion() {
+    try {
+        const res = await fetch('/api/scores/complete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+            },
+            body: JSON.stringify({ roomId: Number(roomId), answers: answerResults })
+        });
+        if (res.ok) {
+            const result = await res.json();
+            showPointsAndBadges(result);
+        }
+    } catch (err) {
+        console.error('Не вдалося зберегти результат:', err);
+    }
+
+    await renderRoomLeaderboard();
+}
+
+function showPointsAndBadges(result) {
+    const pointsEl = document.getElementById('resultPoints');
+    pointsEl.textContent = `+${result.score} очок · ${result.level}`;
+    pointsEl.classList.remove('d-none');
+
+    if (result.newBadges && result.newBadges.length) {
+        const badgesEl = document.getElementById('resultBadges');
+        badgesEl.innerHTML = '<span class="result-badges-label">Нові бейджі:</span>' +
+            result.newBadges.map(b =>
+                `<span class="result-badge">${escapeHtml(b.iconEmoji)} ${escapeHtml(b.name)}</span>`
+            ).join('');
+        badgesEl.classList.remove('d-none');
+    }
+}
+
+async function renderRoomLeaderboard() {
+    try {
+        const res = await fetch(`/api/leaderboard/room/${roomId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+        });
+        if (!res.ok) return;
+
+        const entries = await res.json();
+        if (!entries.length) return;
+
+        const list = document.getElementById('roomLeaderboard');
+        list.innerHTML = entries.map((e, i) => `
+            <li class="lb-item">
+                <span class="lb-rank">${String(i + 1).padStart(2, '0')}</span>
+                <div class="lb-info">
+                    ${playerNameWithTooltip(e)}
+                    <div class="lb-progress">${escapeHtml(e.level)}</div>
+                </div>
+                <span class="lb-score-wrap"><span class="lb-score">${e.score}</span></span>
+            </li>
+        `).join('');
+        document.getElementById('roomLeaderboardWrap').classList.remove('d-none');
+    } catch (err) {
+        console.error('Не вдалося завантажити рейтинг кімнати:', err);
+    }
+}
+
+// Username chip with a profile tooltip (level, totals, badges) on hover/focus.
+function playerNameWithTooltip(entry) {
+    const badges = entry.badges || [];
+    const badgeRows = badges.length
+        ? badges.map(b => `
+            <li class="pt-badge">
+                <span class="pt-badge-icon">${escapeHtml(b.iconEmoji)}</span>
+                <span class="pt-badge-name">${escapeHtml(b.name)}</span>
+            </li>`).join('')
+        : '<li class="pt-badge pt-badge--empty">Ще немає бейджів</li>';
+
+    return `
+        <span class="lb-player" tabindex="0">
+            <span class="lb-name">${escapeHtml(entry.name)}</span>
+            <span class="player-tooltip" role="tooltip">
+                <span class="pt-head">
+                    <span class="pt-name">${escapeHtml(entry.name)}</span>
+                    <span class="pt-level">${escapeHtml(entry.level)}</span>
+                </span>
+                <span class="pt-stats">
+                    <span class="pt-stat"><b>${entry.totalScore ?? 0}</b> очок</span>
+                    <span class="pt-stat"><b>${entry.quizzesCompleted ?? 0}</b> вікторин</span>
+                    <span class="pt-stat"><b>${entry.wins ?? 0}</b> перемог</span>
+                </span>
+                <ul class="pt-badges">${badgeRows}</ul>
+            </span>
+        </span>`;
 }
 
 // ===== TOAST FEEDBACK =====

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RealTimeQuizHub;
@@ -11,9 +12,11 @@ using RealTimeQuizHub;
 namespace RealTimeQuizHub.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260607105619_NewRoomLogic")]
+    partial class NewRoomLogic
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,74 +51,6 @@ namespace RealTimeQuizHub.Migrations
                     b.ToTable("Answers");
                 });
 
-            modelBuilder.Entity("RealTimeQuizHub.Models.Badge", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("IconEmoji")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("Badges");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Description = "Виграйте першу вікторину",
-                            IconEmoji = "🏆",
-                            Name = "Перша перемога"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Description = "Виграйте 3 вікторини загалом",
-                            IconEmoji = "🔥",
-                            Name = "Непереможний"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Description = "Виграйте вікторину в кімнаті з таймером",
-                            IconEmoji = "⚡",
-                            Name = "Блискавка"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Description = "Завершіть вікторину зі 100% правильних",
-                            IconEmoji = "🎯",
-                            Name = "Перфекціоніст"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Description = "Завершіть 5 вікторин загалом",
-                            IconEmoji = "📚",
-                            Name = "Ентузіаст"
-                        });
-                });
-
             modelBuilder.Entity("RealTimeQuizHub.Models.Question", b =>
                 {
                     b.Property<int>("Id")
@@ -146,21 +81,6 @@ namespace RealTimeQuizHub.Migrations
 
                     b.Property<int>("CreatedByUserId")
                         .HasColumnType("integer");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<bool>("HasTimer")
-                        .HasColumnType("boolean");
-
-                    b.Property<double>("TimerScoreImpact")
-                        .HasColumnType("double precision");
-
-                    b.Property<int>("TimerSecondsPerQuestion")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(30);
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -280,72 +200,6 @@ namespace RealTimeQuizHub.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("RealTimeQuizHub.Models.UserBadge", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("BadgeId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("EarnedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("UserId", "BadgeId");
-
-                    b.HasIndex("BadgeId");
-
-                    b.ToTable("UserBadges");
-                });
-
-            modelBuilder.Entity("RealTimeQuizHub.Models.UserScore", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("RoomId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Score")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoomId");
-
-                    b.HasIndex("UserId", "RoomId");
-
-                    b.ToTable("UserScores");
-                });
-
-            modelBuilder.Entity("RealTimeQuizHub.Models.UserStats", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("QuizzesCompleted")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TotalScore")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Wins")
-                        .HasColumnType("integer");
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("UserStats");
-                });
-
             modelBuilder.Entity("RealTimeQuizHub.Models.Answer", b =>
                 {
                     b.HasOne("RealTimeQuizHub.Models.Question", null)
@@ -383,55 +237,6 @@ namespace RealTimeQuizHub.Migrations
                         .IsRequired();
 
                     b.Navigation("Quiz");
-                });
-
-            modelBuilder.Entity("RealTimeQuizHub.Models.UserBadge", b =>
-                {
-                    b.HasOne("RealTimeQuizHub.Models.Badge", "Badge")
-                        .WithMany()
-                        .HasForeignKey("BadgeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RealTimeQuizHub.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Badge");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RealTimeQuizHub.Models.UserScore", b =>
-                {
-                    b.HasOne("RealTimeQuizHub.Models.Room", "Room")
-                        .WithMany()
-                        .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RealTimeQuizHub.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Room");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RealTimeQuizHub.Models.UserStats", b =>
-                {
-                    b.HasOne("RealTimeQuizHub.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("RealTimeQuizHub.Models.Question", b =>
