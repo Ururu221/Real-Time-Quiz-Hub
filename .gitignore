@@ -45,3 +45,5 @@ logs/
 *.vsp
 *.vspx
 /TestResults/
+
+.env
