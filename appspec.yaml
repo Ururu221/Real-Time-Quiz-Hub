@@ -1,0 +1,32 @@
+name: real-time-quiz-hub
+version: 1.0.0
+
+environment:
+  optional:
+    - Logging__LogLevel__Default=Information
+  # Fixed for every environment.
+  internal:
+    - ASPNETCORE_ENVIRONMENT=Production
+    - ASPNETCORE_HTTP_PORTS=8080
+
+secrets:
+  # Full PostgreSQL connection string (contains the password), supplied per
+  # environment. The `db` service itself is infrastructure, not part of this app.
+  db_connection_string:
+  jwt_secret:
+
+app_services:
+  app:
+    type: public
+    # Prefix `plaingood` is mapped to ghcr.io/plaingoodtech by the release workflow
+    # (-r plaingood="ghcr.io/plaingoodtech"). simpled appends the version as the tag.
+    image: plaingood/quiz-hub-app
+    environment:
+      - $all
+    secrets:
+      - db_connection_string:
+        variable: ConnectionStrings__DefaultConnection
+      - jwt_secret:
+        variable: JwtSettings__Secret
+    ports:
+      - 8080
