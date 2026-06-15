@@ -155,6 +155,17 @@ namespace RealTimeQuizHub
 
             var app = builder.Build();
 
+            // Apply pending EF Core migrations on startup so the schema exists
+            // without a separate step. The production runtime image has no SDK or
+            // EF tools, so `dotnet ef database update` can't run there; this keeps
+            // the prod database in sync on every deploy. Idempotent — does nothing
+            // when the DB is already up to date.
+            using (var migrationScope = app.Services.CreateScope())
+            {
+                var db = migrationScope.ServiceProvider.GetRequiredService<AppDbContext>();
+                db.Database.Migrate();
+            }
+
             // One-off sample-data seeding: `dotnet run -- seed`. Seeds quizzes then exits.
             if (args.Contains("seed", StringComparer.OrdinalIgnoreCase))
             {
