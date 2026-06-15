@@ -9,10 +9,6 @@ environment:
   internal:
     - ASPNETCORE_ENVIRONMENT=Production
     - ASPNETCORE_HTTP_PORTS=8080
-    # Postgres now runs as an infra extra_service (see infra.yaml), reachable on
-    # the deploy network at host `postgres`. simpled replaces {postgres_password}
-    # with the postgres_password secret value at deploy time.
-    - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=quizhub;Username=quizhub_user;Password={postgres_password}
 
 secrets:
   # PostgreSQL password. simpled substitutes it into the connection string above
@@ -29,6 +25,12 @@ app_services:
     image: plaingood/quiz-hub-app
     environment:
       - $all
+      # Postgres runs as an infra extra_service (see infra.yaml), reachable on the
+      # deploy network at host `postgres`. simpled replaces {postgres_password}
+      # with the postgres_password secret value at deploy time. The connection
+      # string lives here (service env), not in the top-level `internal:` section,
+      # which only accepts simple values.
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=quizhub;Username=quizhub_user;Password={postgres_password}
     secrets:
       # Attached so simpled resolves the {postgres_password} placeholder used in
       # the ConnectionStrings__DefaultConnection environment variable above.
