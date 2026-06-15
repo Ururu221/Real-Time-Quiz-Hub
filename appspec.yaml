@@ -25,8 +25,8 @@ app_services:
       - $all
     secrets:
       - db_connection_string:
-        variable: ConnectionStrings__DefaultConnection
+          variable: ConnectionStrings__DefaultConnection
       - jwt_secret:
-        variable: JwtSettings__Secret
+          variable: JwtSettings__Secret
     ports:
       - 8080
