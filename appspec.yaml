@@ -1,5 +1,5 @@
 name: real-time-quiz-hub
-version: 1.0.0
+version: 1.0.1
 
 environment:
   # Has a default but can be overridden per environment.
