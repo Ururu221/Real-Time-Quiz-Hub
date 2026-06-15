@@ -55,8 +55,24 @@ namespace RealTimeQuizHub
                 });
             });
 
+            // Resolve the {postgres_password} placeholder from the mounted Docker
+            // secret. simpled injects the connection string with the placeholder
+            // but does not substitute secrets into app-service env vars itself, so
+            // we do it here, reading the password from the file simpled mounts at
+            // /secrets/postgres_password. Locally the connection string from .env
+            // already has the real password and no placeholder, so this is a no-op.
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            const string passwordFile = "/secrets/postgres_password";
+            if (connectionString is not null
+                && connectionString.Contains("{postgres_password}")
+                && File.Exists(passwordFile))
+            {
+                var password = File.ReadAllText(passwordFile).Trim();
+                connectionString = connectionString.Replace("{postgres_password}", password);
+            }
+
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseNpgsql(connectionString));
 
             builder.Services.AddSingleton<IJsonQuestionService>(sp =>
             {

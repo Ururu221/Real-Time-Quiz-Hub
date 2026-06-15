@@ -1,5 +1,5 @@
 name: real-time-quiz-hub
-version: 1.0.1
+version: 1.0.2
 
 environment:
   # Has a default but can be overridden per environment.
@@ -11,9 +11,10 @@ environment:
     - ASPNETCORE_HTTP_PORTS=8080
 
 secrets:
-  # PostgreSQL password. simpled substitutes it into the connection string above
-  # and into the postgres infra service (infra.yaml). Declared here only — the
-  # value comes from the deployment environment, never from git.
+  # PostgreSQL password. Used by the postgres infra service (infra.yaml) and by
+  # the app, which reads it from the mounted file and fills the {postgres_password}
+  # placeholder in the connection string (see Program.cs). Declared here only —
+  # the value comes from the deployment environment, never from git.
   postgres_password:
   jwt_secret:
 
@@ -26,16 +27,15 @@ app_services:
     environment:
       - $all
       # Postgres runs as an infra extra_service (see infra.yaml), reachable on the
-      # deploy network at host `postgres`. simpled replaces {postgres_password}
-      # with the postgres_password secret value at deploy time. The connection
-      # string lives here (service env), not in the top-level `internal:` section,
-      # which only accepts simple values.
+      # deploy network at host `postgres`. The {postgres_password} placeholder is
+      # NOT substituted by simpled in app-service env vars — the app fills it at
+      # startup from the mounted secret file (see Program.cs). Kept here (service
+      # env) rather than the top-level `internal:` section, which rejects values
+      # containing `=`/`;`.
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=quizhub;Username=quizhub_user;Password={postgres_password}
     secrets:
-      # Attached so simpled resolves the {postgres_password} placeholder used in
-      # the ConnectionStrings__DefaultConnection environment variable above.
-      # Mounted as a file (config required by simpled); the app reads the password
-      # via the connection string, not the file.
+      # Mounted as a file at /secrets/postgres_password; the app reads it to
+      # replace the {postgres_password} placeholder in the connection string.
       - postgres_password:
           path: /secrets/postgres_password
       - jwt_secret:

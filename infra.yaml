@@ -6,6 +6,13 @@
 #
 # DB name / user must match docker-compose.yml (local dev) and the connection
 # string in appspec.yaml: database `quizhub`, user `quizhub_user`.
+
+# Named volume — Docker (incl. Swarm) creates it automatically. A bind mount
+# (./path) would fail on the server because Swarm does not create the host
+# source directory and resolves relative paths unpredictably.
+volumes:
+  - postgres-data
+
 extra_services:
   postgres:
     type: internal
@@ -16,12 +23,13 @@ extra_services:
       # Postgres reads the password from the mounted secret file (the *_FILE
       # convention), so the value never appears as a plain env var.
       - POSTGRES_PASSWORD_FILE=/secrets/postgres_password
-    ports:
-      - "5432:5432"
+    # No published ports on prod: the app reaches postgres over the internal
+    # deploy network by service name `postgres`. Publishing 5432 would expose
+    # the database to the host/internet.
     secrets:
       # Mounted as a file so POSTGRES_PASSWORD_FILE above can read it. The explicit
       # path is also the configuration simpled requires for each secret entry.
       - postgres_password:
           path: /secrets/postgres_password
     volumes:
-      - ./volumes/postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
