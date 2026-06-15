@@ -30,4 +30,4 @@ app_services:
       - jwt_secret:
           variable: JwtSettings__Secret
     ports:
-      - 8080
+      - "8080:8080"
