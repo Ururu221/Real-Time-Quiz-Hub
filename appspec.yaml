@@ -2,7 +2,8 @@ name: real-time-quiz-hub
 version: 1.0.0
 
 environment:
-  optional:
+  # Has a default but can be overridden per environment.
+  external:
     - Logging__LogLevel__Default=Information
   # Fixed for every environment.
   internal:
