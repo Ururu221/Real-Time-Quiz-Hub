@@ -19,6 +19,9 @@ extra_services:
     ports:
       - "5432:5432"
     secrets:
+      # Mounted as a file so POSTGRES_PASSWORD_FILE above can read it. The explicit
+      # path is also the configuration simpled requires for each secret entry.
       - postgres_password:
+          path: /secrets/postgres_password
     volumes:
       - ./volumes/postgres-data:/var/lib/postgresql/data

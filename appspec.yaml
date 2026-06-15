@@ -34,7 +34,10 @@ app_services:
     secrets:
       # Attached so simpled resolves the {postgres_password} placeholder used in
       # the ConnectionStrings__DefaultConnection environment variable above.
+      # Mounted as a file (config required by simpled); the app reads the password
+      # via the connection string, not the file.
       - postgres_password:
+          path: /secrets/postgres_password
       - jwt_secret:
           variable: JwtSettings__Secret
     ports:
