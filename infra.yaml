@@ -1,0 +1,24 @@
+# Infrastructure services for simpled deployments.
+#
+# PostgreSQL is infrastructure (its own image version), so it lives in
+# `extra_services`, not `app_services`. Referenced from the deployment's
+# `application.extra` list in the deployments-repo envspec.yaml.
+#
+# DB name / user must match docker-compose.yml (local dev) and the connection
+# string in appspec.yaml: database `quizhub`, user `quizhub_user`.
+extra_services:
+  postgres:
+    type: internal
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=quizhub_user
+      - POSTGRES_DB=quizhub
+      # Postgres reads the password from the mounted secret file (the *_FILE
+      # convention), so the value never appears as a plain env var.
+      - POSTGRES_PASSWORD_FILE=/secrets/postgres_password
+    ports:
+      - "5432:5432"
+    secrets:
+      - postgres_password:
+    volumes:
+      - ./volumes/postgres-data:/var/lib/postgresql/data
