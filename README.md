@@ -1,3 +1,4 @@
+# https://quizhub.plaingood.tech/index.html
 # Real-Time Quiz Hub
 
 A web quiz app where users play quizzes and see a live leaderboard update in real time.
